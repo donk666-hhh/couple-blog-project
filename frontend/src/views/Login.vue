@@ -128,9 +128,6 @@ const handleLogin = async () => {
   }finally {
     loading.value=false
   }
-  // 这里模拟登录，后续替换真实接口
-  ElMessage.success('Welcome back! (Mock Login)')
-  await router.push('/')
 }
 
 const handleRegister = async () => {
