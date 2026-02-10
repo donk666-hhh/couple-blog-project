@@ -7,7 +7,7 @@
 
     <div v-if="!isCoupled" class="solo-mode-container animate-fade-in">
       <header class="solo-header">
-        <h1>Welcome, <span class="highlight-text">{{ user.nickname }}</span> 👋</h1>
+        <h1>Welcome, <span class="highlight-text">{{ user.nickname || user.username }}</span> 👋</h1>
         <p class="subtitle">开启你们的专属空间，只差最后一步啦！</p>
       </header>
 
@@ -15,7 +15,10 @@
         <div class="ticket-stub">
           <div class="stub-content">
             <span class="ticket-label">Your Invite Code</span>
-            <h2 class="invite-code" @click="copyCode">{{ user.inviteCode }} <el-icon><CopyDocument /></el-icon></h2>
+            <h2 class="invite-code" @click="copyCode">
+              {{ user.inviteCode || 'Loading...' }}
+              <el-icon><CopyDocument /></el-icon>
+            </h2>
             <p class="ticket-tip">点击复制，发给 Ta 💖</p>
           </div>
         </div>
@@ -27,8 +30,12 @@
                 v-model="partnerCode"
                 placeholder="输入 Ta 的邀请码"
                 class="custom-input"
-                prefix-icon="Lock"
-            />
+                maxlength="8"
+            >
+              <template #prefix>
+                <el-icon><Lock /></el-icon>
+              </template>
+            </el-input>
             <el-button class="bind-btn" round :loading="loading" @click="handleBind">
               Connect 🚀
             </el-button>
@@ -55,9 +62,7 @@
 
       <header class="love-header">
         <div class="weather-widget">
-          <span class="weather-icon">⛅️ 24°C</span>
-          <span class="divider">~</span>
-          <span class="weather-icon">🌧️ 18°C</span>
+          <span class="weather-icon">⛅️ {{ user.cityName || 'City' }} 24°C</span>
         </div>
 
         <div class="days-counter">
@@ -69,18 +74,19 @@
           <span class="label">Days</span>
         </div>
 
-        <div class="user-avatar">
-          <img :src="user.avatar" alt="User" />
+        <div class="user-avatar" @click="router.push('/profile')">
+          <img :src="user.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.username" alt="User" />
         </div>
       </header>
 
       <main class="bento-container">
+
         <div class="bento-card photo-card" @click="router.push('/album')">
           <div class="polaroid-frame">
             <img src="https://images.unsplash.com/photo-1516589171835-cc4860af09d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Us" />
             <div class="photo-meta">
-              <span class="date">Oct 24, 2025</span>
-              <span class="location">📍 Disneyland</span>
+              <span class="date">Today</span>
+              <span class="location">📍 Sweet Home</span>
             </div>
             <div class="pin">📍</div>
           </div>
@@ -95,24 +101,42 @@
             代码写不出来就歇一歇，想你啦~
           </p>
           <div class="note-footer">
-            <span>— By Alice</span>
+            <span>— By Partner</span>
             <el-button class="reply-btn" size="small" round>Reply ✏️</el-button>
           </div>
         </div>
 
-        <div class="bento-card status-card">
-          <div class="status-emoji">{{ currentStatus.emoji }}</div>
-          <div class="status-text">
-            <span class="label">Current Mood</span>
-            <span class="value">{{ currentStatus.text }}</span>
+        <div class="bento-card status-card-dual">
+
+          <div class="partner-status-area">
+            <div class="p-header">
+              <img :src="coupleInfo?.partner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Partner'" class="p-mini-avatar">
+              <span class="p-name">{{ coupleInfo?.partner?.nickname || 'Ta' }} is:</span>
+            </div>
+            <div class="p-status-content">
+              <span class="p-emoji">{{ partnerDisplayStatus.emoji }}</span>
+              <span class="p-text">{{ partnerDisplayStatus.text }}</span>
+            </div>
           </div>
-          <el-switch
-              v-model="isHappy"
-              class="status-switch"
-              active-color="#FFB7B2"
-              inactive-color="#B5EAD7"
-              @change="toggleStatus"
-          />
+
+          <div class="divider-line"></div>
+
+          <div class="my-status-area">
+            <div class="my-info">
+              <span class="my-label">Me:</span>
+              <span class="my-emoji">{{ displayStatus.emoji }}</span>
+              <span class="my-text">{{ displayStatus.text }}</span>
+            </div>
+            <el-switch
+                v-model="isHappySwitch"
+                class="mini-switch"
+                size="small"
+                active-color="#FF8FAB"
+                inactive-color="#B5EAD7"
+                :loading="statusLoading"
+                @change="handleToggleStatus"
+            />
+          </div>
         </div>
 
         <div class="bento-card wish-card" @click="router.push('/wishlist')">
@@ -140,7 +164,7 @@
         <span class="dock-icon">📅</span>
       </div>
 
-      <div class="dock-item dock-add" @click="openPublish" title="New">
+      <div class="dock-item dock-add" @click="openPublish" title="New Moment">
         <span class="dock-icon-plus">+</span>
       </div>
 
@@ -156,59 +180,145 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { CopyDocument, Lock } from '@element-plus/icons-vue'
+import { userApi, coupleApi } from '@/api'
 
 const router = useRouter()
+const route = useRoute()
 
-// --- 🌟 核心状态控制 ---
-// 真实开发时，这个状态应该从 Pinia 或 localStorage 获取
-const isCoupled = ref(false) // 默认为 false (单身模式) 用于演示
+// --- 🌟 核心状态 ---
+const isCoupled = ref(false)
+const loading = ref(false)
+const statusLoading = ref(false)
 
-// 模拟用户信息
+// 用户信息
 const user = reactive({
-  nickname: 'CoderBoy',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-  inviteCode: '5201314' // 模拟邀请码
+  id: null,
+  nickname: '',
+  username: '',
+  avatar: '',
+  inviteCode: '',
+  cityName: '',
+  isHappy: 1,
+  happyText: 'Coding...',
+  happyEmoji: '💻',
+  restingText: 'Sleeping...',
+  restingEmoji: '😴'
 })
 
-// --- 绑定逻辑 (Solo Mode) ---
-const partnerCode = ref('')
-const loading = ref(false)
+// 开关状态
+const isHappySwitch = ref(true)
 
-const handleBind = () => {
-  if (!partnerCode.value) {
-    ElMessage.warning('请输入对方的邀请码哦')
-    return
+// 情侣信息
+const coupleInfo = ref(null)
+const daysCount = ref(0)
+
+// --- 💡 我的状态 (Computed) ---
+const displayStatus = computed(() => {
+  if (isHappySwitch.value) {
+    return { emoji: user.happyEmoji || '💻', text: user.happyText || 'Coding...' }
+  } else {
+    return { emoji: user.restingEmoji || '😴', text: user.restingText || 'Sleeping...' }
   }
+})
 
+// --- 💡 对方的状态 (Computed) ---
+const partnerDisplayStatus = computed(() => {
+  const p = coupleInfo.value?.partner
+  if (!p) return { emoji: '⏳', text: 'Loading...' }
+
+  // 兼容处理：后端可能还没传 isHappy，默认视为 1
+  // 如果你的后端返回的是 Boolean，这里也能兼容
+  const pIsHappy = (p.isHappy === 1 || p.isHappy === true || p.isHappy === undefined)
+
+  if (pIsHappy) {
+    return {
+      emoji: p.happyEmoji || '💻',
+      text: p.happyText || 'Coding...'
+    }
+  } else {
+    return {
+      emoji: p.restingEmoji || '😴',
+      text: p.restingText || 'Sleeping...'
+    }
+  }
+})
+
+// --- 🔄 切换我的状态 ---
+const handleToggleStatus = async (val) => {
+  statusLoading.value = true
+  try {
+    const res = await userApi.updateProfile({ id: user.id, isHappy: val ? 1 : 0 })
+    if (res.code === '200') {
+      user.isHappy = val ? 1 : 0
+      ElMessage.success(val ? 'Status: Happy ✨' : 'Status: Resting 🌙')
+    }
+  } catch (error) {
+    ElMessage.error('Failed to sync status')
+    isHappySwitch.value = !val
+  } finally {
+    statusLoading.value = false
+  }
+}
+
+// --- 加载逻辑 ---
+const loadUserInfo = async () => {
+  try {
+    const res = await userApi.getCurrentUser()
+    if (res.code === '200') {
+      Object.assign(user, res.data)
+      isHappySwitch.value = user.isHappy === 1
+      if (user.coupleId) {
+        isCoupled.value = true
+        loadCoupleInfo()
+      }
+    }
+  } catch (error) {
+    if (error.response?.status === 401) router.push('/login')
+  }
+}
+
+const loadCoupleInfo = async () => {
+  try {
+    const res = await coupleApi.getCoupleInfo()
+    if (res.code === '200') {
+      coupleInfo.value = res.data
+      if (res.data.couple?.startDate) {
+        const start = new Date(res.data.couple.startDate)
+        daysCount.value = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24))
+      }
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+// --- 绑定 & 复制 ---
+const partnerCode = ref('')
+const handleBind = async () => {
+  if (!partnerCode.value) return ElMessage.warning('请输入邀请码')
   loading.value = true
-  // 模拟 API 请求
-  setTimeout(() => {
-    loading.value = false
-    ElMessage.success('🎉 绑定成功！欢迎来到二人世界！')
-    isCoupled.value = true // 切换界面
-  }, 1500)
+  try {
+    const res = await coupleApi.bindCouple(partnerCode.value.trim())
+    if (res.code === '200') {
+      ElMessage.success('🎉 绑定成功！')
+      isCoupled.value = true
+      await loadUserInfo()
+    } else {
+      ElMessage.error(res.msg || '绑定失败')
+    }
+  } catch (error) { ElMessage.error('绑定失败') }
+  finally { loading.value = false }
 }
 
 const copyCode = () => {
-  navigator.clipboard.writeText(user.inviteCode)
-  ElMessage.success('邀请码已复制，快发给 Ta 吧！')
-}
-
-
-// --- 下面是原来的逻辑 (Couple Mode) ---
-const startDate = new Date('2023-05-20')
-const today = new Date()
-const daysCount = Math.floor((today - startDate) / (1000 * 60 * 60 * 24))
-
-const isHappy = ref(true)
-const currentStatus = reactive({ emoji: '💻', text: 'Coding...' })
-const toggleStatus = (val) => {
-  currentStatus.emoji = val ? '💻' : '😴'
-  currentStatus.text = val ? 'Coding...' : 'Sleeping...'
+  if(user.inviteCode) {
+    navigator.clipboard.writeText(user.inviteCode)
+    ElMessage.success('已复制邀请码')
+  }
 }
 
 const customColors = [
@@ -218,125 +328,65 @@ const customColors = [
   { color: '#FF9AA2', percentage: 100 },
 ]
 
-const openPublish = () => {
-  if (!isCoupled.value) {
-    ElMessage.info('可以先写点个人日记哦 (功能开发中)')
-  } else {
-    console.log('Open Couple Publish Modal')
-  }
-}
+const openPublish = () => { console.log('Open Publish') }
+
+// 路由监听
+watch(() => route.path, (newPath) => {
+  if (newPath === '/home') loadUserInfo()
+})
+
+onMounted(() => {
+  loadUserInfo()
+})
 </script>
 
 <style scoped>
-/* 引入字体 */
 @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
-/* === 全局变量 === */
-:root {
-  --bg-cream: #FFFBF5;
-  --primary-pink: #FF8FAB;
-  --text-main: #5D5D5D;
-  --shadow-soft: 0 8px 30px rgba(0,0,0,0.04);
-}
+:root { --bg-cream: #FFFBF5; --primary-pink: #FF8FAB; --text-main: #5D5D5D; --shadow-soft: 0 8px 30px rgba(0,0,0,0.04); }
 
 .home-container {
-  min-height: 100vh;
-  background-color: #FFFBF5;
-  color: #5D5D5D;
-  font-family: 'Nunito', sans-serif;
-  padding: 20px;
-  position: relative;
-  overflow-x: hidden;
-  box-sizing: border-box;
+  min-height: 100vh; background-color: #FFFBF5; color: #5D5D5D; font-family: 'Nunito', sans-serif; padding: 20px; position: relative; overflow-x: hidden; box-sizing: border-box;
 }
 
-/* 渐入动画 */
 .animate-fade-in { animation: fadeIn 0.8s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-/* 背景光斑 */
+/* 背景 Blob */
 .bg-blob { position: fixed; border-radius: 50%; filter: blur(90px); z-index: 0; opacity: 0.5; }
 .blob-1 { width: 400px; height: 400px; background: #FFB7B2; top: -100px; left: -50px; }
 .blob-2 { width: 300px; height: 300px; background: #B5EAD7; bottom: 100px; right: -50px; }
 .blob-3 { width: 200px; height: 200px; background: #FFDAC1; top: 40%; left: 40%; opacity: 0.3; }
 
-
-/* =========================================
-   🆕 单身模式样式 (Solo Mode Styles)
-   ========================================= */
-.solo-header {
-  text-align: center; margin-top: 60px; margin-bottom: 40px; position: relative; z-index: 10;
-}
+/* Solo Mode Styles */
+.solo-header { text-align: center; margin-top: 60px; margin-bottom: 40px; position: relative; z-index: 10; }
 .solo-header h1 { font-size: 32px; font-weight: 800; color: #333; margin-bottom: 10px; }
 .highlight-text { color: var(--primary-pink); }
 .subtitle { color: #999; font-size: 16px; }
-
-/* 绑定邀请卡 (车票风格) */
-.bind-card {
-  max-width: 600px; margin: 0 auto 50px;
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
-  display: flex; overflow: hidden; position: relative; z-index: 10;
-  transition: transform 0.3s;
-}
+.bind-card { max-width: 600px; margin: 0 auto 50px; background: #fff; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); display: flex; overflow: hidden; position: relative; z-index: 10; transition: transform 0.3s; }
 .bind-card:hover { transform: translateY(-5px); }
-
-/* 左侧存根 */
-.ticket-stub {
-  background: #FF8FAB; color: #fff;
-  width: 200px; padding: 30px 20px;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  position: relative;
-  border-right: 2px dashed rgba(255,255,255,0.6); /* 虚线分割 */
-}
-/* 票据半圆缺口 */
-.ticket-stub::before, .ticket-stub::after {
-  content: ''; position: absolute; right: -10px; width: 20px; height: 20px;
-  background: #FFFBF5; border-radius: 50%;
-}
-.ticket-stub::before { top: -10px; }
-.ticket-stub::after { bottom: -10px; }
-
+.ticket-stub { background: #FF8FAB; color: #fff; width: 200px; padding: 30px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; border-right: 2px dashed rgba(255,255,255,0.6); }
+.ticket-stub::before, .ticket-stub::after { content: ''; position: absolute; right: -10px; width: 20px; height: 20px; background: #FFFBF5; border-radius: 50%; }
+.ticket-stub::before { top: -10px; } .ticket-stub::after { bottom: -10px; }
 .ticket-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
 .invite-code { font-size: 32px; font-weight: 900; margin: 10px 0; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 .ticket-tip { font-size: 12px; opacity: 0.8; }
-
-/* 右侧输入区 */
-.ticket-main {
-  flex: 1; padding: 40px; background: rgba(255,255,255,0.9);
-}
+.ticket-main { flex: 1; padding: 40px; background: rgba(255,255,255,0.9); }
 .ticket-main h3 { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #333; }
 .input-area { display: flex; gap: 15px; }
 .bind-btn { background: #333; color: #fff; border: none; font-weight: 700; }
 .bind-btn:hover { background: #000; }
-
-/* 个人功能 Grid */
-.solo-grid {
-  max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 10;
-}
-.solo-card {
-  background: rgba(255,255,255,0.6); border-radius: 20px; padding: 25px;
-  text-align: center; cursor: pointer; transition: all 0.3s;
-  border: 1px solid rgba(255,255,255,0.8);
-}
+.solo-grid { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 10; }
+.solo-card { background: rgba(255,255,255,0.6); border-radius: 20px; padding: 25px; text-align: center; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.8); }
 .solo-card:hover { background: #fff; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 .solo-card .icon { font-size: 30px; display: block; margin-bottom: 10px; }
 .solo-card h4 { margin: 0 0 5px 0; font-weight: 700; color: #333; }
 .solo-card p { margin: 0; font-size: 12px; color: #999; }
 
-
-/* =========================================
-   💏 情侣模式样式 (Couple Mode - 复用之前的)
-   ========================================= */
-.love-header {
-  position: relative; z-index: 10;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 20px; margin-bottom: 30px;
-}
+/* Couple Mode Styles */
+.love-header { position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; margin-bottom: 30px; }
 .weather-widget { font-size: 14px; font-weight: 700; color: #9A9A9A; background: rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 20px; }
-.divider { margin: 0 8px; color: #FFB7B2; }
 .days-counter { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .label { font-size: 12px; letter-spacing: 1px; color: #9A9A9A; text-transform: uppercase; }
 .count-box { display: flex; align-items: center; gap: 5px; }
@@ -344,7 +394,7 @@ const openPublish = () => {
 .heart-icon { font-size: 24px; margin-top: 10px; }
 .animate-beat { animation: heartbeatJelly 1.6s cubic-bezier(0.25, 0.8, 0.25, 1) infinite; }
 @keyframes heartbeatJelly { 0% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(0.95); } 45% { transform: scale(1.1); } 60% { transform: scale(1); } 100% { transform: scale(1); } }
-.user-avatar img { width: 45px; height: 45px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-soft); }
+.user-avatar img { width: 45px; height: 45px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-soft); object-fit: cover; }
 
 .bento-container { position: relative; z-index: 10; max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: 240px 180px; gap: 24px; padding-bottom: 100px; }
 .bento-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); overflow: hidden; position: relative; }
@@ -366,12 +416,28 @@ const openPublish = () => {
 .reply-btn { background: #FFDAC1; border: none; color: #7a5c48; font-weight: 700; }
 .reply-btn:hover { background: #FFCeb4; }
 
-.status-card { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 100%); }
-.status-emoji { font-size: 48px; line-height: 1; }
-.status-text { text-align: center; }
-.status-text .label { display: block; font-size: 10px; color: #B0C4DE; margin-bottom: 2px; }
-.status-text .value { font-weight: 800; font-size: 16px; color: #5D5D5D; }
-.status-switch { margin-top: 5px; }
+/* 🌟 Status Card Dual Layout */
+.status-card-dual {
+  padding: 15px 20px; display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 100%);
+}
+.partner-status-area { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.p-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.p-mini-avatar { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; }
+.p-name { font-size: 12px; color: #999; font-weight: 700; }
+.p-status-content { display: flex; align-items: center; gap: 8px; }
+.p-emoji { font-size: 32px; }
+.p-text { font-size: 16px; font-weight: 800; color: #5D5D5D; }
+
+.divider-line { height: 1px; background: rgba(0,0,0,0.05); margin: 5px 0; }
+
+.my-status-area { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+.my-info { display: flex; align-items: center; gap: 8px; }
+.my-label { font-size: 12px; font-weight: 700; color: #999; }
+.my-emoji { font-size: 20px; }
+/* 🆕 新增：我的文字样式 */
+.my-text { font-size: 14px; font-weight: 700; color: #5D5D5D; margin-left: 5px; }
+.mini-switch { transform: scale(0.9); }
 
 .wish-card { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #FFF0F5 0%, #FFFFFF 100%); cursor: pointer; }
 .jar-icon { font-size: 40px; margin-bottom: 10px; }

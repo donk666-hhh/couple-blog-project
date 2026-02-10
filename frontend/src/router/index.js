@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Welcome from '../views/welcome.vue'
 import HomeView from '../views/HomeView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,7 +27,13 @@ const router = createRouter({
       path: '/home',     // 浏览器地址栏会变成 http://localhost:5173/home
       name: 'home',
       component: HomeView
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView
     }
+
   ]
 })
 
