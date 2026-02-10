@@ -274,21 +274,6 @@ onUnmounted(() => {
   border: 2px solid transparent;
 }
 
-//* 🌟 修复后的导航项样式 */
-.nav-item {
-  position: relative;
-  padding: 8px 20px; /* 稍微缩小一点，更精致 */
-  border-radius: 40px;
-  color: var(--text-main); /* 默认深灰色文字，更清晰 */
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 1;
-  /* 默认给一个透明边框，防止抖动 */
-  border: 2px solid transparent;
-}
-
 /* 🖱️ 悬浮状态 (Hover) - 变成浅浅的粉色背景 */
 .nav-item:hover {
   color: #D65A5A; /* 文字变深红 */
