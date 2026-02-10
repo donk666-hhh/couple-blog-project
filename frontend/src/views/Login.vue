@@ -115,13 +115,27 @@ const handleLogin = async () => {
       password:loginForm.password
     })
 
-    if(response.data.code===200){
+
+    // ... 前面的 axios 请求代码 ...
+
+    // 1. 注意这里要用 response.data 拿到后端返回的 JSON
+    // 2. 注意 code 是字符串 "200"
+    if (response.data.code === "200") {
+
       ElMessage.success('登录成功！')
-      localStorage.setItem('token',response.data.token)
-      await router.push('/')
-    }else{
-      ElMessage.error(response.data.message||"登录失败")
+
+      // 3. 注意 token 在 response.data.data 里面
+      // 解释：第一个 data 是 Axios 的，第二个 data 是你后端 Result 对象的字段
+      localStorage.setItem('token', response.data.data.token)
+
+      await router.push('/home')
+
+    } else {
+      // 错误消息通常在 response.data.msg
+      ElMessage.error(response.data.msg || "登录失败")
     }
+
+// ... 后面的 catch 代码 ...
   }catch (error){
     console.error(error)
     ElMessage.error('服务器连接超时')
