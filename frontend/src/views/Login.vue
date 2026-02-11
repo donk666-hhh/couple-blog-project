@@ -85,8 +85,8 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Back } from '@element-plus/icons-vue'
-import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { userApi } from '@/api'
 
 // --- 原有逻辑 ---
 const router = useRouter()
@@ -108,84 +108,47 @@ const handleLogin = async () => {
     return
   }
 
-  loading.value=true
+  loading.value = true
   try {
-    const response = await axios.post('http://localhost:8080/user/login',{
-      username:loginForm.username,
-      password:loginForm.password
+    const response = await userApi.login({
+      username: loginForm.username,
+      password: loginForm.password
     })
 
-
-    // ... 前面的 axios 请求代码 ...
-
-    // 1. 注意这里要用 response.data 拿到后端返回的 JSON
-    // 2. 注意 code 是字符串 "200"
-    if (response.data.code === "200") {
-
-      ElMessage.success('登录成功！')
-
-      // 3. 注意 token 在 response.data.data 里面
-      // 解释：第一个 data 是 Axios 的，第二个 data 是你后端 Result 对象的字段
-      localStorage.setItem('token', response.data.data.token)
-
-      await router.push('/home')
-
-    } else {
-      // 错误消息通常在 response.data.msg
-      ElMessage.error(response.data.msg || "登录失败")
-    }
-
-// ... 后面的 catch 代码 ...
-  }catch (error){
+    ElMessage.success('登录成功！')
+    localStorage.setItem('token', response.data.token)
+    await router.push('/home')
+  } catch (error) {
     console.error(error)
-    ElMessage.error('服务器连接超时')
-  }finally {
-    loading.value=false
+    ElMessage.error(error.message || '服务器连接超时')
+  } finally {
+    loading.value = false
   }
 }
 
 const handleRegister = async () => {
-  // 1. 【非空校验】先看看三个空填满了没
   if (!registerForm.username || !registerForm.password || !registerForm.nickname) {
     ElMessage.warning('请将信息填写完整！')
     return
   }
 
-  // 2. 【开启加载】让按钮转圈圈，防止用户狂点
   loading.value = true
-
   try {
-    // 3. 【发送请求】向后端发起注册申请
-    // 注意：这里的字段名 (username, password, nickname) 必须和你 Java 后端 User 实体类的属性名一模一样！
-    const response = await axios.post('http://localhost:8080/user/register', {
+    await userApi.register({
       username: registerForm.username,
       password: registerForm.password,
       nickname: registerForm.nickname
     })
 
-    // 4. 【处理结果】
-    if (response.data.code === 200) {
-      // 成功了！
-      ElMessage.success('注册成功，快去登录吧！')
-
-      // 关键动作：自动切回登录模式，提升体验
-      isRegister.value = false
-
-      // 可选：把刚才填的东西清空，免得切回来还在
-      registerForm.username = ''
-      registerForm.password = ''
-      registerForm.nickname = ''
-    } else {
-      // 失败了（比如用户名重复），显示后端返回的错误消息 (response.data.msg)
-      ElMessage.error(response.data.msg || '注册失败')
-    }
-
+    ElMessage.success('注册成功，快去登录吧！')
+    isRegister.value = false
+    registerForm.username = ''
+    registerForm.password = ''
+    registerForm.nickname = ''
   } catch (error) {
-    // 5. 【异常兜底】网断了或者后端挂了
     console.error(error)
-    ElMessage.error('服务器连接超时，请检查后端是否启动')
+    ElMessage.error(error.message || '服务器连接超时')
   } finally {
-    // 6. 【结束加载】不管成功失败，按钮停止转圈
     loading.value = false
   }
 }

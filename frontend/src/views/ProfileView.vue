@@ -39,12 +39,10 @@
 
       <div class="setting-card">
         <h3 class="section-title">Basic Info</h3>
-
         <div class="form-item">
           <label>Nickname</label>
           <el-input v-model="form.nickname" placeholder="Your Nickname" class="cream-input" />
         </div>
-
         <div class="form-item">
           <label>City (For Weather)</label>
           <el-select v-model="form.cityCode" placeholder="Select City" class="cream-select" @change="handleCityChange">
@@ -69,14 +67,7 @@
               show-word-limit
           />
           <div class="emoji-picker">
-            <span
-                v-for="emoji in popularEmojis"
-                :key="emoji"
-                :class="{ 'emoji-active': form.happyEmoji === emoji }"
-                @click="selectEmoji('happy', emoji)"
-            >
-              {{ emoji }}
-            </span>
+            <span v-for="emoji in popularEmojis" :key="emoji" :class="{ 'emoji-active': form.happyEmoji === emoji }" @click="selectEmoji('happy', emoji)">{{ emoji }}</span>
           </div>
         </div>
       </div>
@@ -92,14 +83,7 @@
               show-word-limit
           />
           <div class="emoji-picker">
-            <span
-                v-for="emoji in popularEmojis"
-                :key="emoji"
-                :class="{ 'emoji-active': form.restingEmoji === emoji }"
-                @click="selectEmoji('resting', emoji)"
-            >
-              {{ emoji }}
-            </span>
+            <span v-for="emoji in popularEmojis" :key="emoji" :class="{ 'emoji-active': form.restingEmoji === emoji }" @click="selectEmoji('resting', emoji)">{{ emoji }}</span>
           </div>
         </div>
       </div>
@@ -117,7 +101,6 @@
 
       <div class="setting-card danger-zone" v-if="isCoupled && coupleInfo">
         <h3 class="section-title" style="color: #D65A5A;">Relationship</h3>
-
         <div class="partner-info">
           <img :src="coupleInfo.partner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Partner'" alt="Partner" class="partner-avatar" />
           <div class="partner-text">
@@ -125,7 +108,6 @@
             <span class="p-days">Since {{ formatDate(coupleInfo.couple?.startDate) }}</span>
           </div>
         </div>
-
         <el-button class="unbind-btn" plain @click="handleUnbind">
           💔 Unbind Relationship
         </el-button>
@@ -140,23 +122,14 @@
 
     </div>
 
-    <el-dialog
-        v-model="pwdDialogVisible"
-        title="Change Password"
-        width="90%"
-        class="cream-dialog"
-        align-center
-    >
+    <!-- 暂时注释 FloatingDock 排查白屏问题 -->
+    <!-- <FloatingDock /> -->
+
+    <el-dialog v-model="pwdDialogVisible" title="Change Password" width="90%" class="cream-dialog" align-center>
       <el-form :model="pwdForm" label-position="top">
-        <el-form-item label="Old Password">
-          <el-input v-model="pwdForm.oldPwd" type="password" show-password class="cream-input" />
-        </el-form-item>
-        <el-form-item label="New Password">
-          <el-input v-model="pwdForm.newPwd" type="password" show-password class="cream-input" />
-        </el-form-item>
-        <el-form-item label="Confirm New Password">
-          <el-input v-model="pwdForm.confirmPwd" type="password" show-password class="cream-input" />
-        </el-form-item>
+        <el-form-item label="Old Password"><el-input v-model="pwdForm.oldPwd" type="password" show-password class="cream-input" /></el-form-item>
+        <el-form-item label="New Password"><el-input v-model="pwdForm.newPwd" type="password" show-password class="cream-input" /></el-form-item>
+        <el-form-item label="Confirm New Password"><el-input v-model="pwdForm.confirmPwd" type="password" show-password class="cream-input" /></el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -175,42 +148,20 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Camera, CopyDocument } from '@element-plus/icons-vue'
 import { userApi, coupleApi } from '@/api'
+// import FloatingDock from '@/components/FloatingDock.vue' // 暂时注释排查问题
 
 const router = useRouter()
 const loading = ref(false)
 const isCoupled = ref(false)
 const pwdDialogVisible = ref(false)
 
-// 表单数据 (包含两套心情配置)
 const form = reactive({
-  id: null,
-  username: '',
-  nickname: '',
-  avatar: '',
-  cityCode: '',
-  cityName: '',
-  // 快乐模式配置
-  happyText: 'Coding...',
-  happyEmoji: '💻',
-  // 休息模式配置
-  restingText: 'Sleeping...',
-  restingEmoji: '😴',
-  // 当前状态 (仅用于保存时回显，界面上不改)
-  isHappy: 1,
-  inviteCode: ''
+  id: null, username: '', nickname: '', avatar: '', cityCode: '', cityName: '',
+  happyText: 'Coding...', happyEmoji: '💻', restingText: 'Sleeping...', restingEmoji: '😴',
+  isHappy: 1, inviteCode: ''
 })
-
-// 情侣信息
 const coupleInfo = ref(null)
-
-// 密码表单
-const pwdForm = reactive({
-  oldPwd: '',
-  newPwd: '',
-  confirmPwd: ''
-})
-
-// 修复后的 Emoji 列表
+const pwdForm = reactive({ oldPwd: '', newPwd: '', confirmPwd: '' })
 const popularEmojis = ['💻', '😴', '🌈', '✨', '☕', '🎮', '🥰', '💪', '🔥', '🚀', '🎨', '🌙', '💤', '🌊']
 
 // --- 加载用户信息 ---
@@ -223,7 +174,6 @@ const loadUserInfo = async () => {
       if (typeof form.isHappy === 'boolean') {
         form.isHappy = form.isHappy ? 1 : 0
       }
-
       // 检查绑定
       if (form.coupleId) {
         isCoupled.value = true
@@ -232,30 +182,22 @@ const loadUserInfo = async () => {
     }
   } catch (error) {
     console.error('获取用户信息失败:', error)
+    ElMessage.error(error.message || '获取用户信息失败')
     if (error.response?.status === 401) {
       router.push('/login')
     }
   }
 }
 
-// --- 加载情侣信息 ---
 const loadCoupleInfo = async () => {
   try {
     const res = await coupleApi.getCoupleInfo()
-    if (res.code === '200') {
-      coupleInfo.value = res.data
-    }
-  } catch (error) {
-    console.error(error)
-  }
+    if (res.code === '200') coupleInfo.value = res.data
+  } catch (error) { console.error(error) }
 }
 
-// --- 初始化 ---
-onMounted(() => {
-  loadUserInfo()
-})
+onMounted(() => { loadUserInfo() })
 
-// --- 头像逻辑 ---
 const handleAvatarChange = async (file) => {
   if (file.raw) {
     try {
@@ -264,44 +206,29 @@ const handleAvatarChange = async (file) => {
         form.avatar = res.data
         ElMessage.success('头像上传成功！')
       }
-    } catch (error) {
-      ElMessage.error('头像上传失败')
-    }
+    } catch (error) { ElMessage.error('头像上传失败') }
   }
 }
 
-// --- 城市逻辑 ---
 const handleCityChange = (val) => {
-  const cityMap = {
-    '101010': 'Beijing',
-    '101020': 'Shanghai',
-    '101280': 'Guangzhou',
-    '101279': 'Shenzhen',
-    '101210': 'Hangzhou',
-    '101270': 'Chengdu'
-  }
+  const cityMap = { '101010': 'Beijing', '101020': 'Shanghai', '101280': 'Guangzhou', '101279': 'Shenzhen', '101210': 'Hangzhou', '101270': 'Chengdu' }
   form.cityName = cityMap[val] || ''
 }
 
-// --- 选择表情 (分模式) ---
 const selectEmoji = (mode, emoji) => {
-  if (mode === 'happy') {
-    form.happyEmoji = emoji
-  } else if (mode === 'resting') {
-    form.restingEmoji = emoji
-  }
+  if (mode === 'happy') form.happyEmoji = emoji
+  else if (mode === 'resting') form.restingEmoji = emoji
 }
 
-// --- 复制邀请码 ---
 const copyInviteCode = () => {
   if (!form.inviteCode) return ElMessage.warning('邀请码加载中...')
   navigator.clipboard.writeText(form.inviteCode)
   ElMessage.success('Copied!')
 }
 
-// --- 修改密码 ---
 const handleChangePassword = async () => {
   if (!pwdForm.oldPwd || !pwdForm.newPwd) return ElMessage.warning('Fill all fields')
+  if (pwdForm.newPwd.length < 6) return ElMessage.warning('Password too short')
   if (pwdForm.newPwd !== pwdForm.confirmPwd) return ElMessage.error('Passwords mismatch')
 
   loading.value = true
@@ -310,35 +237,28 @@ const handleChangePassword = async () => {
     if (res.code === '200') {
       ElMessage.success('Password updated! Please relogin.')
       pwdDialogVisible.value = false
-      setTimeout(() => router.push('/login'), 1500)
+      setTimeout(() => {
+        localStorage.removeItem('token')
+        router.push('/login')
+      }, 1500)
     }
-  } catch (error) {
-    ElMessage.error(error.message || 'Error changing password')
-  } finally {
-    loading.value = false
-  }
+  } catch (error) { ElMessage.error(error.message || 'Error changing password') }
+  finally { loading.value = false }
 }
 
-// --- 保存资料 (核心) ---
+// --- 保存资料 & 跳转 ---
 const saveProfile = async () => {
   loading.value = true
   try {
-    // 提交全量数据
     const res = await userApi.updateProfile({
-      nickname: form.nickname,
-      avatar: form.avatar,
-      cityCode: form.cityCode,
-      cityName: form.cityName,
-      // 提交两套状态配置
-      happyText: form.happyText,
-      happyEmoji: form.happyEmoji,
-      restingText: form.restingText,
-      restingEmoji: form.restingEmoji,
-      // 保持当前开关状态不变
-      isHappy: form.isHappy
+      ...form
     })
     if (res.code === '200') {
       ElMessage.success('Profile saved! ✨')
+      // 🌟 保存成功后跳转回首页
+      setTimeout(() => {
+        router.push('/home')
+      }, 500)
     }
   } catch (error) {
     ElMessage.error(error.message || 'Save failed')
@@ -347,34 +267,33 @@ const saveProfile = async () => {
   }
 }
 
-// --- 解绑 ---
 const handleUnbind = () => {
-  ElMessageBox.confirm(
-      'Are you sure? This will clear couple data.', 'Unbind?',
-      { confirmButtonText: 'Yes', cancelButtonText: 'No', type: 'warning' }
-  ).then(async () => {
-    loading.value = true
-    try {
-      const res = await coupleApi.unbindCouple()
-      if (res.code === '200') {
-        ElMessage.info('Unbound successfully.')
-        router.push('/home')
-      }
-    } catch (e) { ElMessage.error('Unbind failed') }
-    finally { loading.value = false }
-  }).catch(() => {})
+  ElMessageBox.confirm('Are you sure?', 'Unbind?', { confirmButtonText: 'Yes', cancelButtonText: 'No', type: 'warning' })
+      .then(async () => {
+        loading.value = true
+        try {
+          const res = await coupleApi.unbindCouple()
+          if (res.code === '200') {
+            ElMessage.info('Unbound successfully.')
+            router.push('/home')
+          }
+        } catch (e) { ElMessage.error('Unbind failed') }
+        finally { loading.value = false }
+      }).catch(() => {})
 }
 
-// --- 登出 ---
+// --- 退出登录 ---
 const handleLogout = () => {
   ElMessageBox.confirm('Log out now?', 'Confirm', { confirmButtonText: 'Log Out' })
       .then(() => {
+        // 🌟 清除 Token
         localStorage.removeItem('token')
+        // 跳转登录页
         router.push('/login')
+        ElMessage.success('Logged out successfully')
       })
 }
 
-// --- 日期格式化 ---
 const formatDate = (dateStr) => {
   if (!dateStr) return 'Unknown'
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -405,7 +324,7 @@ const formatDate = (dateStr) => {
 .page-title { font-size: 18px; font-weight: 800; margin: 0; }
 .placeholder { width: 60px; }
 
-.content-wrapper { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+.content-wrapper { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 160px; /* 增加底部留白给Dock */ }
 .animate-slide-up { animation: slideUp 0.5s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -478,4 +397,11 @@ const formatDate = (dateStr) => {
 .bg-blob { position: fixed; border-radius: 50%; filter: blur(90px); z-index: 0; opacity: 0.5; }
 .blob-1 { width: 300px; height: 300px; background: #B5EAD7; top: -50px; right: -50px; }
 .blob-2 { width: 300px; height: 300px; background: #FFDAC1; bottom: -50px; left: -50px; }
+/* 针对手机端的特殊优化 */
+@media (max-width: 768px) {
+  .content-wrapper {
+    /* 手机屏幕小，Dock 离底部更近，所以需要更多留白 */
+    padding-bottom: 200px !important;
+  }
+}
 </style>

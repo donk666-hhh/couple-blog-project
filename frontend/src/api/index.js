@@ -141,12 +141,37 @@ export const albumApi = {
 
 // 时光轴相关接口
 export const timelineApi = {
-  // 获取时光轴
-  getTimeline: (coupleId) => {
+  // 获取时光轴列表
+  getTimeline: () => {
     return request({
       url: '/timeline/list',
-      method: 'get',
-      params: { coupleId }
+      method: 'get'
+    })
+  },
+
+  // 创建时光轴事件
+  createEvent: (data) => {
+    return request({
+      url: '/timeline/create',
+      method: 'post',
+      data
+    })
+  },
+
+  // 更新时光轴事件
+  updateEvent: (id, data) => {
+    return request({
+      url: `/timeline/update/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  // 删除时光轴事件
+  deleteEvent: (id) => {
+    return request({
+      url: `/timeline/delete/${id}`,
+      method: 'delete'
     })
   }
 }

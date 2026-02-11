@@ -4,6 +4,52 @@
     <div class="bg-blob blob-1"></div>
     <div class="bg-blob blob-2"></div>
 
+    <!-- 版本更新公告弹窗 -->
+    <el-dialog
+      v-model="showUpdateDialog"
+      width="480px"
+      :close-on-click-modal="false"
+      :show-close="true"
+      class="update-dialog"
+      align-center
+    >
+      <div class="update-content">
+        <div class="update-banner">
+          <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&auto=format&fit=crop&q=60" alt="Update Banner">
+          <div class="version-badge">v1.2.0</div>
+        </div>
+
+        <div class="update-body">
+          <h2>🎉 好久不见，我们更新啦！</h2>
+
+          <div class="update-section">
+            <h4>✨ 本次更新内容</h4>
+            <ul>
+              <li>新增时光轴功能，记录恋爱中的每个重要时刻</li>
+              <li>心情状态双模式切换（Happy / Resting）</li>
+              <li>优化情侣绑定流程，更加丝滑</li>
+              <li>修复若干已知问题</li>
+            </ul>
+          </div>
+
+          <div class="update-section developer-note">
+            <h4>💌 开发者寄语</h4>
+            <p>
+              感谢你选择 Couple Blog！<br>
+              这个小小的项目，承载着我对爱情美好的向往。<br>
+              希望这里能成为你们记录甜蜜时光的小天地。<br><br>
+              如果喜欢，欢迎在 <strong>GitHub</strong> 给个 ⭐️ 支持一下～<br>
+              有任何建议或问题，欢迎提 Issue！
+            </p>
+          </div>
+
+          <div class="update-footer">
+            <span class="developer-sign">— 独立开发者 刘同学 🐱</span>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
     <header class="header" :class="{ 'header-scrolled': isScrolled }">
       <div class="logo">
         <div class="logo-box">C/B</div>
@@ -132,6 +178,22 @@ import { ArrowRight } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
+// --- 版本更新弹窗 ---
+const CURRENT_VERSION = '1.2.0'
+const showUpdateDialog = ref(false)
+
+const checkVersionUpdate = () => {
+  const savedVersion = localStorage.getItem('app_version')
+  if (savedVersion !== CURRENT_VERSION) {
+    showUpdateDialog.value = true
+    localStorage.setItem('app_version', CURRENT_VERSION)
+  }
+}
+
+const closeUpdateDialog = () => {
+  showUpdateDialog.value = false
+}
+
 // --- 状态变量 ---
 const isScrolled = ref(false) // 是否发生滚动（控制Header变色）
 const activeTab = ref('') // 当前选中的导航项
@@ -174,6 +236,7 @@ const scrollToActivity = () => {
 // 生命周期钩子
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+  checkVersionUpdate() // 检查版本更新
 })
 
 onUnmounted(() => {
@@ -436,6 +499,165 @@ onUnmounted(() => {
 .card-text span { font-size: 12px; color: var(--text-light); }
 
 .footer { text-align: center; padding: 40px; color: var(--text-light); font-size: 14px; }
+
+/* ==============================================
+   H. 版本更新弹窗样式
+   ============================================== */
+.update-dialog :deep(.el-dialog) {
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.update-dialog :deep(.el-dialog__header) {
+  display: none;
+}
+
+.update-dialog :deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.update-content {
+  background: #fff;
+}
+
+.update-banner {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+.update-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.version-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--primary-pink);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 143, 171, 0.4);
+}
+
+.update-body {
+  padding: 28px 30px;
+}
+
+.update-body h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.update-section {
+  margin-bottom: 20px;
+}
+
+.update-section h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.update-section ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.update-section li {
+  margin-bottom: 4px;
+}
+
+.developer-note {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFF 100%);
+  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 143, 171, 0.2);
+}
+
+.developer-note p {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.developer-note strong {
+  color: var(--primary-pink);
+}
+
+.update-footer {
+  text-align: right;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.developer-sign {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+}
+
+/* 移动端弹窗适配 */
+@media (max-width: 540px) {
+  .update-dialog :deep(.el-dialog) {
+    width: 90% !important;
+    margin: 20px auto !important;
+  }
+
+  .update-banner {
+    height: 140px;
+  }
+
+  .update-body {
+    padding: 20px 18px;
+  }
+
+  .update-body h2 {
+    font-size: 18px;
+  }
+
+  .update-section h4 {
+    font-size: 13px;
+  }
+
+  .update-section ul {
+    font-size: 13px;
+    padding-left: 16px;
+  }
+
+  .developer-note {
+    padding: 14px 14px;
+  }
+
+  .developer-note p {
+    font-size: 12px;
+  }
+
+  .developer-sign {
+    font-size: 12px;
+  }
+
+  .version-badge {
+    top: 12px;
+    right: 12px;
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
 
 /* ==============================================
    G. 移动端适配 (Mobile Responsive)

@@ -65,7 +65,7 @@
           <span class="weather-icon">⛅️ {{ user.cityName || 'City' }} 24°C</span>
         </div>
 
-        <div class="days-counter">
+        <div class="days-counter" @click="router.push('/timeline')">
           <span class="label">Being in love for</span>
           <div class="count-box">
             <span class="num">{{ daysCount }}</span>
@@ -83,7 +83,7 @@
 
         <div class="bento-card photo-card" @click="router.push('/album')">
           <div class="polaroid-frame">
-            <img src="https://images.unsplash.com/photo-1516589171835-cc4860af09d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Us" />
+            <img src="@/assets/41e543c29f854bb32233aae8a74bc48a.jpg" alt="Us" />
             <div class="photo-meta">
               <span class="date">Today</span>
               <span class="location">📍 Sweet Home</span>
@@ -387,7 +387,21 @@ onMounted(() => {
 /* Couple Mode Styles */
 .love-header { position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; margin-bottom: 30px; }
 .weather-widget { font-size: 14px; font-weight: 700; color: #9A9A9A; background: rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 20px; }
-.days-counter { text-align: center; display: flex; flex-direction: column; align-items: center; }
+/* 找到 .days-counter，加上 cursor 和 hover 效果 */
+.days-counter {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 👇 新增这两行 */
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 👇 新增 hover 效果 */
+.days-counter:hover {
+  transform: scale(1.1); /* 鼠标放上去放大一点点 */
+}
 .label { font-size: 12px; letter-spacing: 1px; color: #9A9A9A; text-transform: uppercase; }
 .count-box { display: flex; align-items: center; gap: 5px; }
 .num { font-size: 48px; font-weight: 900; background: linear-gradient(45deg, #FF9AA2, #FFB7B2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
@@ -451,6 +465,7 @@ onMounted(() => {
 .dock-add { background: #FF8FAB; color: #fff; width: 55px; height: 55px; box-shadow: 0 5px 20px rgba(255, 143, 171, 0.4); }
 .dock-add:hover { background: #FF7096; transform: translateY(-10px) scale(1.1); }
 .dock-icon-plus { font-size: 30px; font-weight: 300; line-height: 1; margin-top: -3px; }
+
 
 /* 移动端适配 */
 @media (max-width: 768px) {

@@ -5,36 +5,55 @@ import Login from '../views/Login.vue'
 import Welcome from '../views/welcome.vue'
 import HomeView from '../views/HomeView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import TimelineView from '../views/TimelineView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      // 根路径 (http://localhost:5173/)
-      // 现在默认显示 Welcome (门户首页)
       path: '/',
       name: 'welcome',
       component: Welcome
     },
     {
-      // 登录路径 (http://localhost:5173/login)
-      // 用户点了"登录"按钮才会跳到这里
       path: '/login',
       name: 'login',
       component: Login
     },
     {
-      path: '/home',     // 浏览器地址栏会变成 http://localhost:5173/home
+      path: '/home',
       name: 'home',
-      component: HomeView
+      component: HomeView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/profile',
       name: 'profile',
-      component: ProfileView
+      component: ProfileView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/timeline',
+      name: 'timeline',
+      component: TimelineView,
+      meta: { requiresAuth: true }
     }
-
   ]
+})
+
+// 路由守卫：检查登录状态
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+
+  if (to.meta.requiresAuth && !token) {
+    // 需要登录但没有 token，跳转到登录页
+    next('/login')
+  } else if (to.path === '/login' && token) {
+    // 已登录用户访问登录页，跳转到首页
+    next('/home')
+  } else {
+    next()
+  }
 })
 
 export default router
