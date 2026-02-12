@@ -149,10 +149,22 @@ export const timelineApi = {
     })
   },
 
-  // 创建时光轴事件
+  // 上传时光轴图片
+  uploadImage: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request({
+      url: '/timeline/upload',
+      method: 'post',
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+
+  // 创建时光轴事件（保存到数据库）
   createEvent: (data) => {
     return request({
-      url: '/timeline/create',
+      url: '/timeline/save',  // 后端接口改为 /save
       method: 'post',
       data
     })
