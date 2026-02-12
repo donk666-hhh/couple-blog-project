@@ -6,6 +6,7 @@ import Welcome from '../views/welcome.vue'
 import HomeView from '../views/HomeView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import TimelineView from '../views/TimelineView.vue'
+import NoteWallView from '../views/NoteWallView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,6 +37,12 @@ const router = createRouter({
       path: '/timeline',
       name: 'timeline',
       component: TimelineView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/notes',
+      name: 'notes',
+      component: NoteWallView,
       meta: { requiresAuth: true }
     }
   ]

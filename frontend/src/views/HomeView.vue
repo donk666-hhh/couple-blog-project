@@ -89,7 +89,7 @@
           <div class="card-label">Daily Sweet 🍯</div>
         </div>
 
-        <div class="bento-card note-card">
+        <div class="bento-card note-card" @click="router.push('/notes')">
           <div class="tape"></div>
           <h3 class="note-title">To My Love:</h3>
           <p class="handwriting-font">

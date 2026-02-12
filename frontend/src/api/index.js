@@ -235,5 +235,13 @@ export const noteApi = {
       url: `/note/read/${id}`,
       method: 'put'
     })
+  },
+
+  // 删除留言
+  deleteNote: (id) => {
+    return request({
+      url: `/note/${id}`,
+      method: 'delete'
+    })
   }
 }

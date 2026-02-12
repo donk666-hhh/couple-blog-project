@@ -112,24 +112,157 @@ frontend/src/
 - **默认连接**: `jdbc:mysql://localhost:3306/couple_blog`
 - **用户名/密码**: root/root（生产环境请修改）
 
-### 迁移脚本
-`backend/src/main/resources/db/` 目录包含：
-- `add_jwt_fields.sql` - JWT 认证相关字段
-- `add_invite_code.sql` - 邀请码字段
-- `add_mood_states.sql` - 心情状态字段
+### 数据库初始化
+完整 SQL 脚本位于 `backend/couple-blog-backend/sql.txt`，包含所有表的创建语句。
+
+```bash
+# 创建数据库
+mysql -u root -p -e "CREATE DATABASE couple_blog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 导入完整表结构
+mysql -u root -p couple_blog < backend/couple-blog-backend/sql.txt
+```
 
 ### 核心数据表
-| 表名 | 用途 |
-|------|------|
-| `sys_user` | 用户账户（包含心情状态） |
-| `sys_couple` | 情侣关系表 |
-| `sys_post` | 博客文章 |
-| `sys_note` | 情侣留言（冰箱贴风格） |
-| `sys_timeline` | 时光轴记录 |
-| `sys_album` | 相册管理 |
-| `sys_wishlist` | 愿望清单 |
-| `sys_activity` | 官方活动 |
-| `sys_comment` | 评论系统 |
+
+#### 1. sys_user (用户表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 主键ID (自增) |
+| username | varchar(50) | 登录账号 (唯一) |
+| password | varchar(100) | 登录密码 (BCrypt加密) |
+| nickname | varchar(50) | 用户昵称 |
+| avatar | varchar(500) | 头像URL |
+| couple_id | bigint | 关联的情侣ID (NULL表示单身) |
+| status | tinyint | 状态: 1正常, 0禁用 |
+| create_time | datetime | 注册时间 |
+| authorities | varchar(255) | 用户权限 (默认: ROLE_USER) |
+| invite_code | varchar(20) | 邀请码 (唯一, 用于情侣绑定) |
+| city_code | varchar(20) | 城市编码 (用于天气API) |
+| city_name | varchar(50) | 城市名称 (如: 广州) |
+| happy_text | varchar(50) | Happy状态文字 (默认: Coding...) |
+| happy_emoji | varchar(10) | Happy状态Emoji (默认: 💻) |
+| resting_text | varchar(50) | Resting状态文字 (默认: Sleeping...) |
+| resting_emoji | varchar(10) | Resting状态Emoji (默认: 😴) |
+| mood_text | varchar(50) | 当前状态文字 (兼容字段) |
+| mood_emoji | varchar(20) | 当前状态Emoji (兼容字段) |
+| is_happy | tinyint(1) | 心情开关: 1开心/忙碌, 0休息/难过 |
+| deleted | tinyint | 逻辑删除 (0-未删除, 1-已删除) |
+
+#### 2. sys_couple (情侣关系表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 情侣ID (自增) |
+| user_id_a | bigint | 一方用户ID |
+| user_id_b | bigint | 另一方用户ID |
+| couple_name | varchar(100) | 空间名称 (默认: 我们的温馨小窝) |
+| start_date | date | 恋爱纪念日 |
+| bg_image | varchar(500) | 情侣空间背景图 |
+| status | tinyint | 状态: 1热恋中, 0已解除 |
+| create_time | datetime | 绑定时间 |
+| deleted | tinyint | 逻辑删除 |
+
+#### 3. sys_post (帖子笔记表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 帖子ID (自增) |
+| user_id | bigint | 发帖人ID |
+| couple_id | bigint | 归属情侣ID (NULL则为个人贴) |
+| title | varchar(100) | 帖子标题 |
+| content | text | 文字内容 |
+| cover_img | varchar(500) | 封面图 (用于首页展示) |
+| image_urls | json | 多张配图JSON数组 |
+| permission | tinyint | 权限: 0公开, 1仅情侣, 2仅自己 |
+| activity_id | bigint | 关联的活动ID |
+| like_count | int | 点赞数 |
+| create_time | datetime | 发布时间 |
+| deleted | tinyint | 逻辑删除 |
+
+#### 4. sys_note (情侣留言板/冰箱贴)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 留言ID (自增) |
+| couple_id | bigint | 情侣ID |
+| sender_id | bigint | 发送者ID |
+| content | varchar(1000) | 留言内容 (支持HTML) |
+| bg_image | varchar(255) | 便签背景图/颜色风格 |
+| is_read | tinyint(1) | 对方是否已读 |
+| create_time | datetime | 留言时间 |
+| deleted | tinyint(1) | 逻辑删除 |
+
+#### 5. sys_timeline (恋爱时光轴)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 事件ID (自增) |
+| couple_id | bigint | 情侣ID |
+| title | varchar(100) | 事件标题 (如: 第一次牵手) |
+| event_date | date | 发生日期 |
+| type | varchar(20) | 事件类型: love/travel/food/milestone/gift/cat |
+| description | text | 事件描述 |
+| image_url | varchar(500) | 纪念图片 |
+| create_time | datetime | 创建时间 |
+| deleted | tinyint | 逻辑删除 |
+
+#### 6. sys_album (情侣相册)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 照片ID (自增) |
+| couple_id | bigint | 情侣ID |
+| url | varchar(500) | 照片地址 |
+| album_name | varchar(50) | 相册分类 (默认: 默认相册) |
+| create_time | datetime | 上传时间 |
+| deleted | tinyint | 逻辑删除 |
+
+#### 7. sys_wishlist (愿望清单)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 愿望ID (自增) |
+| couple_id | bigint | 情侣ID |
+| title | varchar(50) | 愿望标题 (如: Mac mini M5) |
+| icon | varchar(20) | 愿望图标Emoji (默认: ⭐️) |
+| content | varchar(500) | 详细描述/备注 |
+| target_amount | decimal(10,2) | 目标金额/总进度 |
+| current_amount | decimal(10,2) | 当前已存金额/当前进度 |
+| status | tinyint | 状态: 0未实现, 1已实现 |
+| proof_img | varchar(500) | 还愿照片 |
+| type | tinyint | 类型: 0存钱罐(买东西), 1约定/计划 |
+| target_date | datetime | 目标日期 (用于倒计时) |
+| current_progress | int | 手动进度 (针对非金额类愿望) |
+| create_time | datetime | 创建时间 |
+| deleted | tinyint | 逻辑删除 |
+
+#### 8. sys_activity (官方活动表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 活动ID (自增) |
+| title | varchar(200) | 活动标题 |
+| description | varchar(1000) | 活动描述/规则 |
+| cover_img | varchar(500) | 活动Banner/海报 |
+| start_time | datetime | 开始时间 (V2.1新增) |
+| end_time | datetime | 结束时间 (V2.1新增) |
+| status | tinyint | 状态: 1进行中, 0已结束 |
+| create_time | datetime | 创建时间 |
+| deleted | tinyint | 逻辑删除 |
+
+#### 9. sys_comment (评论表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 评论ID (自增) |
+| post_id | bigint | 关联帖子ID |
+| user_id | bigint | 评论人ID |
+| content | varchar(500) | 评论内容 |
+| create_time | datetime | 评论时间 |
+| deleted | tinyint | 逻辑删除 |
+
+### 表关系说明
+- **sys_user.couple_id** → **sys_couple.id** (用户关联情侣)
+- **sys_couple** 连接两个用户 (user_id_a 和 user_id_b)
+- **sys_post.couple_id** → **sys_couple.id** (帖子归属情侣)
+- **sys_note.couple_id** → **sys_couple.id** (留言归属情侣)
+- **sys_timeline.couple_id** → **sys_couple.id** (时光轴事件归属情侣)
+- **sys_album.couple_id** → **sys_couple.id** (相册归属情侣)
+- **sys_wishlist.couple_id** → **sys_couple.id** (愿望清单归属情侣)
+- **sys_comment.post_id** → **sys_post.id** (评论关联帖子)
 
 ## 核心功能
 
