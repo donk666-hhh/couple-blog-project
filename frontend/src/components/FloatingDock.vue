@@ -108,8 +108,8 @@ onMounted(async () => {
 }
 
 .dock-login {
-  width: 65px;
-  height: 65px;
+  width: 55px;
+  height: 55px;
 }
 
 .dock-add:hover {
@@ -121,12 +121,5 @@ onMounted(async () => {
 .dock-icon-text {
   font-size: 14px;
   font-weight: 600;
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .floating-dock { bottom: 20px; padding: 8px 15px; gap: 10px; }
-  .dock-item { width: 40px; height: 40px; }
-  .dock-add { width: 50px; height: 50px; }
 }
 </style>

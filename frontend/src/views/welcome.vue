@@ -797,7 +797,7 @@ const momentImages = [
 }
 
 .sparkle-btn:hover::before {
-  opacity: 1; /* 鼠标悬停时显示流光 */
+  opacity: 1;
 }
 
 @keyframes glowing {
@@ -914,7 +914,7 @@ const momentImages = [
 }
 
 .sparkle-btn:hover::before {
-  opacity: 1; /* 鼠标悬停时显示流光 */
+  opacity: 1;
 }
 
 @keyframes glowing {
@@ -954,5 +954,17 @@ const momentImages = [
   0% { transform: scale(0); opacity: 0; }
   50% { transform: scale(1); opacity: 1; }
   100% { transform: scale(0); opacity: 0; }
+}
+/* ================= 📱 移动端专属优化 ================= */
+@media (max-width: 768px) {
+  /* 强制按钮始终显示发光背景，不需要按住 */
+  .sparkle-btn::before {
+    opacity: 1 !important; /* 强制不透明 */
+  }
+
+  /* 可选：让星星在移动端稍微大一点点，更显眼 */
+  .sparkle {
+    transform: scale(1.2);
+  }
 }
 </style>
