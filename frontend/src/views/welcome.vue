@@ -1,5 +1,11 @@
 <template>
   <div class="gallery-container cream-theme">
+    <!-- 纯CSS云朵 -->
+    <div class="clouds-container">
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+    </div>
     <div class="bg-blob blob-1"></div>
     <div class="bg-blob blob-2"></div>
 
@@ -67,9 +73,13 @@
         <p class="hero-desc">把我们的生活碎片，整理成最温柔的诗。<br>这里没有喧嚣，只有我们。</p>
 
         <div class="hero-actions">
-          <button class="primary-btn" @click="router.push('/login')">
+          <button class="primary-btn sparkle-btn" @click="router.push('/login')">
             <span>Start Journey</span>
             <el-icon><ArrowRight /></el-icon>
+
+            <div class="sparkles">
+              <div v-for="n in 10" :key="n" class="sparkle"></div>
+            </div>
           </button>
         </div>
       </div>
@@ -696,5 +706,253 @@ const momentImages = [
   .update-body h2 {
     font-size: 18px;
   }
+}
+
+/* ================= ☁️ 纯CSS云朵动画 ================= */
+.clouds-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 100px;
+  box-shadow: 0 8px 5px rgba(0,0,0,0.03);
+  animation: floatCloud linear infinite;
+  opacity: 0.8;
+}
+
+.cloud::after, .cloud::before {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.cloud::after {
+  width: 50px; height: 50px;
+  top: -25px; left: 25px;
+}
+
+.cloud::before {
+  width: 40px; height: 40px;
+  top: -18px; left: 60px;
+}
+
+.cloud-1 {
+  width: 120px; height: 40px;
+  top: 15%; left: -20%;
+  animation-duration: 45s;
+  opacity: 0.6;
+}
+
+.cloud-2 {
+  width: 160px; height: 50px;
+  top: 35%; left: -10%;
+  animation-duration: 60s;
+  animation-delay: -15s;
+  opacity: 0.5;
+  transform: scale(1.2);
+}
+
+.cloud-3 {
+  width: 100px; height: 35px;
+  top: 65%; left: -15%;
+  animation-duration: 55s;
+  animation-delay: -25s;
+  opacity: 0.7;
+}
+
+@keyframes floatCloud {
+  0% { left: -20%; }
+  100% { left: 120%; }
+}
+
+/* ================= ✨ 按钮发光 & 星星 CSS ================= */
+/* 1. 按钮边缘流光 */
+.sparkle-btn {
+  position: relative;
+  overflow: visible; /* 让流光能显示在外面 */
+  transition: transform 0.3s;
+}
+
+.sparkle-btn::before {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  background: linear-gradient(45deg, #ff8fab, #ffd166, #06d6a0, #118ab2, #ff8fab);
+  background-size: 400%;
+  z-index: -1;
+  border-radius: 50px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: glowing 20s linear infinite;
+}
+
+.sparkle-btn:hover::before {
+  opacity: 1; /* 鼠标悬停时显示流光 */
+}
+
+@keyframes glowing {
+  0% { background-position: 0 0; }
+  50% { background-position: 400% 0; }
+  100% { background-position: 0 0; }
+}
+
+/* 2. 星星闪烁 */
+.sparkles {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 50px;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 0 0 5px #fff;
+  animation: sparkleAnim 2s infinite ease-in-out;
+}
+
+/* ================= ☁️ 纯CSS云朵动画 ================= */
+.clouds-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 100px;
+  box-shadow: 0 8px 5px rgba(0,0,0,0.03);
+  animation: floatCloud linear infinite;
+  opacity: 0.8;
+}
+
+.cloud::after, .cloud::before {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.cloud::after {
+  width: 50px; height: 50px;
+  top: -25px; left: 25px;
+}
+
+.cloud::before {
+  width: 40px; height: 40px;
+  top: -18px; left: 60px;
+}
+
+.cloud-1 {
+  width: 120px; height: 40px;
+  top: 15%; left: -20%;
+  animation-duration: 45s;
+  opacity: 0.6;
+}
+
+.cloud-2 {
+  width: 160px; height: 50px;
+  top: 35%; left: -10%;
+  animation-duration: 60s;
+  animation-delay: -15s;
+  opacity: 0.5;
+  transform: scale(1.2);
+}
+
+.cloud-3 {
+  width: 100px; height: 35px;
+  top: 65%; left: -15%;
+  animation-duration: 55s;
+  animation-delay: -25s;
+  opacity: 0.7;
+}
+
+@keyframes floatCloud {
+  0% { left: -20%; }
+  100% { left: 120%; }
+}
+
+/* ================= ✨ 按钮发光 & 星星 CSS ================= */
+/* 1. 按钮边缘流光 */
+.sparkle-btn {
+  position: relative;
+  overflow: visible; /* 让流光能显示在外面 */
+  transition: transform 0.3s;
+}
+
+.sparkle-btn::before {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  background: linear-gradient(45deg, #ff8fab, #ffd166, #06d6a0, #118ab2, #ff8fab);
+  background-size: 400%;
+  z-index: -1;
+  border-radius: 50px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: glowing 20s linear infinite;
+}
+
+.sparkle-btn:hover::before {
+  opacity: 1; /* 鼠标悬停时显示流光 */
+}
+
+@keyframes glowing {
+  0% { background-position: 0 0; }
+  50% { background-position: 400% 0; }
+  100% { background-position: 0 0; }
+}
+
+/* 2. 星星闪烁 */
+.sparkles {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 50px;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 0 0 5px #fff;
+  animation: sparkleAnim 2s infinite ease-in-out;
+}
+
+/* 给星星随机位置 */
+.sparkle:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+.sparkle:nth-child(2) { top: 80%; left: 70%; animation-delay: 0.3s; }
+.sparkle:nth-child(3) { top: 40%; left: 40%; animation-delay: 0.6s; }
+.sparkle:nth-child(4) { top: 20%; left: 80%; animation-delay: 0.9s; }
+.sparkle:nth-child(5) { top: 60%; left: 10%; animation-delay: 1.2s; }
+/* ...更多星星会自动复用动画 */
+
+@keyframes sparkleAnim {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
 }
 </style>

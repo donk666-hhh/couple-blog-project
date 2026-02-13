@@ -109,6 +109,7 @@ onMounted(async () => {
 
 .dock-login {
   width: 65px;
+  height: 65px;
 }
 
 .dock-add:hover {
