@@ -13,64 +13,52 @@
       <div class="update-content">
         <div class="update-banner">
           <img src="@/assets/微信图片_20260209195436_136_99.jpg" alt="Update Banner">
-          <div class="version-badge">v1.3.0</div>
+          <div class="version-badge">v2.0.1</div>
           <div class="close-icon" @click="closeUpdateDialog">
             <el-icon><Close /></el-icon>
           </div>
         </div>
-
         <div class="update-body">
-          <h2>🎉 欢迎来到 Couple Blog</h2>
-
+          <h2>🎉 新功能上线啦！</h2>
           <div class="update-section">
-            <h4>✨ 功能亮点</h4>
+            <h4>✨ 留言板增强</h4>
             <ul>
-              <li>📸 <strong>时光轴功能</strong>：记录生活中的美好瞬间</li>
-              <li>☁️ <strong>云端存储</strong>：照片安全保存在阿里云</li>
-              <li>🎨 <strong>九宫格展示</strong>：智能布局，美观大方</li>
-              <li>🔒 <strong>隐私保护</strong>：情侣空间完全隔离</li>
+              <li>📝 <strong>便签墙页面</strong>：记录你的心情寄语</li>
+              <li>🎨 <strong>4种便签颜色</strong>：yellow/pink/blue/green 自由选择</li>
+              <li>📌 <strong>置顶功能</strong>：首页显示最重要的便签</li>
+              <li>✏️ <strong>心情贴纸</strong>：带上 Emoji 表达此刻心情</li>
+              <li>💬 <strong>即时编辑</strong>：随时修改已发布的便签</li>
             </ul>
           </div>
-
+          <div class="update-section">
+            <h4>🧭 浮动导航栏</h4>
+            <ul>
+              <li>底部常驻，快速切换页面</li>
+              <li>适配移动端，单手操作友好</li>
+            </ul>
+          </div>
+          <div class="update-section">
+            <h4>🔄 首页联动</h4>
+            <ul>
+              <li>便签颜色在首页同步展示</li>
+              <li>置顶便签优先显示</li>
+              <li>双方留言分区展示</li>
+            </ul>
+          </div>
           <div class="update-section developer-note">
             <h4>💌 关于我们</h4>
             <p>
-              这是一个专为情侣打造的私密博客空间。<br>
-              在这里，你们可以：<strong>共同记录时光、分享心情、留下寄语</strong>。<br>
-              每一张照片、每一段文字，都是爱情的见证。<br><br>
+              Couple Blog 是一个专为情侣打造的私密空间。<br>
+              一次更新，都希望带给你们更多惊喜！💕<br><br>
               感谢选择我们，祝你们永远甜如蜜糖！🍬
             </p>
           </div>
-
           <div class="update-footer">
-            <span class="developer-sign">— 刘同学 🐱</span>
+            <span class="developer-sign">— Claude & 刘同学 🐱</span>
           </div>
         </div>
       </div>
     </el-dialog>
-
-    <header class="header" :class="{ 'header-scrolled': isScrolled }">
-      <div class="logo">
-        <div class="logo-box">C/B</div>
-        <span class="logo-text">Couple<span class="dot">.</span>Blog</span>
-      </div>
-
-      <nav class="nav-menu">
-        <span
-            v-for="item in navItems"
-            :key="item"
-            class="nav-item"
-            :class="{ active: activeTab === item }"
-            @click="handleNavClick(item)"
-        >
-          {{ item }}
-        </span>
-      </nav>
-
-      <div class="actions">
-        <el-button class="login-btn" round @click="router.push('/login')">Log In</el-button>
-      </div>
-    </header>
 
     <section class="hero-section">
       <div class="hero-content">
@@ -168,12 +156,14 @@
       <p>© 2026 Couple Blog. Made with 🥛 & 🍯.</p>
     </footer>
   </div>
+  <FloatingDock />
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { ArrowRight, Close } from '@element-plus/icons-vue'
+import FloatingDock from "@/components/FloatingDock.vue"
 
 const router = useRouter()
 
@@ -184,49 +174,17 @@ const closeUpdateDialog = () => {
   showUpdateDialog.value = false
 }
 
-// --- 页面状态逻辑 ---
-const isScrolled = ref(false)
-const activeTab = ref('')
-const navItems = ['Timeline', 'Album', 'Wishlist', 'Events']
-
+// --- 页面数据 ---
 const momentImages = [
   { src: 'https://images.unsplash.com/photo-1490810235433-239104826d29?auto=format&fit=crop&w=600&q=80', title: 'Sunday Brunch', user: 'Alice' },
   { src: 'https://images.unsplash.com/photo-1520013817300-1f4c1cb245ef?auto=format&fit=crop&w=600&q=80', title: 'Beach Day', user: 'Bob' },
   { src: 'https://images.unsplash.com/photo-1485230405346-71acb9518d9c?auto=format&fit=crop&w=600&q=80', title: 'Nature Walk', user: 'Alice' },
   { src: 'https://images.unsplash.com/photo-1505935428862-770b6f24f629?auto=format&fit=crop&w=600&q=80', title: 'Our Cat', user: 'Bob' }
 ]
-
-const handleScroll = () => {
-  isScrolled.value = window.scrollY > 50
-}
-
-const handleNavClick = (tab) => {
-  activeTab.value = tab
-  if (tab === 'Events') {
-    scrollToActivity()
-  } else {
-    router.push('/login')
-  }
-}
-
-const scrollToActivity = () => {
-  const element = document.getElementById('activity-anchor');
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+/* 使用系统字体栈，替代 Google Fonts */
 
 /* CSS 变量 */
 :root {
@@ -243,7 +201,7 @@ onUnmounted(() => {
   min-height: 100vh;
   background-color: var(--bg-cream);
   color: var(--text-main);
-  font-family: 'Nunito', sans-serif;
+  font-family: 'PingFang SC', 'Nunito', 'Microsoft YaHei', sans-serif;
   overflow-x: hidden;
   position: relative;
 }
@@ -259,89 +217,9 @@ onUnmounted(() => {
 .blob-1 { width: 500px; height: 500px; background: #FFDAC1; top: -100px; left: -100px; }
 .blob-2 { width: 400px; height: 400px; background: #E2F0CB; bottom: 0; right: -50px; }
 
-/* 头部导航 */
-.header {
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 100;
-  padding: 20px 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.4s ease;
-  box-sizing: border-box;
-}
-
-.header-scrolled {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  padding: 15px 60px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
-}
-
-.logo { display: flex; align-items: center; gap: 12px; }
-.logo-box {
-  background: var(--text-main);
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 16px;
-}
-.logo-text { font-size: 20px; font-weight: 700; }
-.dot { color: var(--primary-pink); font-size: 30px; line-height: 0; }
-
-.nav-menu {
-  display: flex;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 6px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  gap: 5px;
-}
-
-.nav-item {
-  padding: 8px 20px;
-  border-radius: 40px;
-  color: var(--text-main);
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-  z-index: 1;
-  border: 2px solid transparent;
-}
-
-.nav-item:hover {
-  color: #D65A5A;
-  background: #FFF0F0;
-  border-color: #FFD1D1;
-  transform: translateY(-2px);
-}
-
-.nav-item.active {
-  background: var(--primary-pink);
-  color: #fff;
-  border-color: var(--primary-pink);
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(255, 143, 171, 0.6);
-}
-
-.login-btn {
-  background: var(--text-main);
-  border: none;
-  color: #fff;
-  padding: 10px 24px;
-  font-weight: 700;
-  transition: all 0.3s;
-}
-.login-btn:hover { background: #000; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
-
 /* Hero Section */
 .hero-section {
-  padding: 160px 8% 80px;
+  padding: 100px 8% 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -776,7 +654,7 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .hero-section {
     flex-direction: column-reverse;
-    padding: 100px 20px 60px;
+    padding: 60px 20px 60px;
     text-align: center;
   }
 
@@ -792,8 +670,6 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
   }
-
-  .nav-menu { display: none; }
 
   .bento-grid, .moments-row {
     grid-template-columns: 1fr;

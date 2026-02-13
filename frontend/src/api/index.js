@@ -211,6 +211,15 @@ export const noteApi = {
     })
   },
 
+  // 更新留言
+  updateNote: (data) => {
+    return request({
+      url: '/note/update',
+      method: 'put',
+      data
+    })
+  },
+
   // 获取留言列表
   getNoteList: (coupleId) => {
     return request({
@@ -242,6 +251,22 @@ export const noteApi = {
     return request({
       url: `/note/${id}`,
       method: 'delete'
+    })
+  },
+
+  // 设置首页置顶
+  pinToHome: (id) => {
+    return request({
+      url: `/note/pin/${id}`,
+      method: 'put'
+    })
+  },
+
+  // 取消首页置顶
+  unpinFromHome: (id) => {
+    return request({
+      url: `/note/unpin/${id}`,
+      method: 'put'
     })
   }
 }

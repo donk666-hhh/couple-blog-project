@@ -41,8 +41,13 @@ request.interceptors.response.use(
     if (error.response?.status === 401) {
       console.log('401 未授权，清除token')
       localStorage.removeItem('token')
-      // 可以在这里跳转到登录页
-      // window.location.href = '/login'
+      window.location.href = '/login'
+    }
+    // 处理403禁止访问错误
+    if (error.response?.status === 403) {
+      console.log('403 禁止访问，清除token并跳转登录页')
+      localStorage.removeItem('token')
+      window.location.href = '/login'
     }
     return Promise.reject(error)
   }

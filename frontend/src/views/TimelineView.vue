@@ -283,7 +283,7 @@ onMounted(() => { fetchTimeline() })
 
 <style scoped>
 /* 基础样式复用（省略重复部分，保持一致）... */
-.timeline-container { min-height: 100vh; background-color: #FFFBF5; font-family: 'Nunito', sans-serif; padding-bottom: 120px; position: relative; overflow-x: hidden; }
+.timeline-container { min-height: 100vh; background-color: #FFFBF5; font-family: 'PingFang SC', 'Nunito', 'Microsoft YaHei', sans-serif; padding-bottom: 120px; position: relative; overflow-x: hidden; }
 .bg-blob { position: fixed; border-radius: 50%; filter: blur(90px); z-index: 0; opacity: 0.5; }
 .blob-1 { width: 400px; height: 400px; background: #FFB7B2; top: -100px; left: -50px; }
 .blob-2 { width: 300px; height: 300px; background: #B5EAD7; bottom: 100px; right: -50px; }

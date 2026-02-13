@@ -129,8 +129,17 @@ mysql -u root -p couple_blog < backend/couple-blog-backend/sql.txt
 | content | varchar(1000) | NOT NULL | - | 留言内容 (支持HTML) |
 | bg_image | varchar(255) | NULL | - | 便签背景图/颜色风格 |
 | is_read | tinyint(1) | DEFAULT 0 | 0 | 对方是否已读 |
+| mood | varchar(20) | NULL | - | 心情贴纸 (Emoji) |
+| is_hidden | tinyint(1) | DEFAULT 0 | 0 | 是否为刮刮乐 (0否 1是) |
+| is_on_home | tinyint(1) | DEFAULT 0 | 0 | 是否置顶到首页 (0否 1是) |
 | create_time | datetime | DEFAULT CURRENT_TIMESTAMP | - | 留言时间 |
 | deleted | tinyint(1) | DEFAULT 0 | 0 | 逻辑删除 |
+
+**便签颜色说明**：
+- `yellow` - 羊皮纸黄 (#FDF6E3)
+- `pink` - 脏粉 (#FCE4EC)
+- `blue` - 冰川蓝 (#E1F5FE)
+- `green` - 抹茶绿 (#E8F5E9)
 
 **索引:**
 - PRIMARY KEY (`id`)

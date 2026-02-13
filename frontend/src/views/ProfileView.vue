@@ -301,7 +301,7 @@ const formatDate = (dateStr) => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+/* 使用系统字体栈，替代 Google Fonts */
 
 :root { --bg-cream: #FFFBF5; --text-main: #5D5D5D; }
 
@@ -309,7 +309,7 @@ const formatDate = (dateStr) => {
   min-height: 100vh;
   background-color: #FFFBF5;
   color: #5D5D5D;
-  font-family: 'Nunito', sans-serif;
+  font-family: 'PingFang SC', 'Nunito', 'Microsoft YaHei', sans-serif;
   position: relative;
   overflow-x: hidden;
 }

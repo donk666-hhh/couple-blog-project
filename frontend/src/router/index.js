@@ -7,6 +7,8 @@ import HomeView from '../views/HomeView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import TimelineView from '../views/TimelineView.vue'
 import NoteWallView from '../views/NoteWallView.vue'
+import Roadmap from '../views/Roadmap.vue'
+import Developing from '../views/Developing.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +46,36 @@ const router = createRouter({
       name: 'notes',
       component: NoteWallView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/timeline',
+      name: 'timeline',
+      component: TimelineView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/album',
+      name: 'album',
+      component: Developing,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/wishlist',
+      name: 'wishlist',
+      component: Developing,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/developing',
+      name: 'developing',
+      component: Developing,
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/roadmap',
+      name: 'roadmap',
+      component: Roadmap,
+      meta: { requiresAuth: false }
     }
   ]
 })

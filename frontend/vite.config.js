@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
+  base: '/', // 部署到服务器根路径
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -4,15 +4,19 @@
       <span class="dock-icon">🏠</span>
     </div>
 
-    <div v-if="isCoupled" class="dock-item" @click="router.push('/timeline')" :class="{ active: currentRoute === '/timeline' }">
+    <div v-if="isCoupled || isWelcomePage" class="dock-item" @click="router.push('/timeline')" :class="{ active: currentRoute === '/timeline' }">
       <span class="dock-icon">📅</span>
     </div>
 
-    <div class="dock-item dock-add" @click="openPublish">
+    <!-- welcome 页面显示登录按钮，其他页面显示发布按钮 -->
+    <div v-if="isWelcomePage" class="dock-item dock-add dock-login" @click="router.push('/login')">
+      <span class="dock-icon-text">登录</span>
+    </div>
+    <div v-else class="dock-item dock-add" @click="openPublish">
       <span class="dock-icon-plus">+</span>
     </div>
 
-    <div class="dock-item" @click="router.push('/album')" :class="{ active: currentRoute === '/album' }">
+    <div class="dock-item" @click="router.push('/album?feature=album')" :class="{ active: currentRoute === '/album' }">
       <span class="dock-icon">📷</span>
     </div>
 
@@ -32,6 +36,7 @@ const route = useRoute()
 
 const currentRoute = computed(() => route.path)
 const isCoupled = ref(false)
+const isWelcomePage = computed(() => route.path === '/')
 
 const openPublish = () => {
   // 这里以后可以触发全局事件总线，或者简单的 console
@@ -40,6 +45,12 @@ const openPublish = () => {
 
 // 简单的检查是否绑定，决定是否显示时间轴
 onMounted(async () => {
+  // 在欢迎页不调用 API，避免 401 自动跳转到登录页
+  const route = useRoute()
+  if (route.path === '/') {
+    return
+  }
+
   try {
     // 这里为了性能，也可以直接读取 localStorage 里的缓存，如果存了的话
     // 或者简单判断一下是否有 token
@@ -96,11 +107,20 @@ onMounted(async () => {
   box-shadow: 0 5px 20px rgba(255, 143, 171, 0.4);
 }
 
+.dock-login {
+  width: 65px;
+}
+
 .dock-add:hover {
   background: #FF7096; transform: translateY(-10px) scale(1.1);
 }
 
 .dock-icon-plus { font-size: 30px; font-weight: 300; line-height: 1; margin-top: -3px; }
+
+.dock-icon-text {
+  font-size: 14px;
+  font-weight: 600;
+}
 
 /* 移动端适配 */
 @media (max-width: 768px) {

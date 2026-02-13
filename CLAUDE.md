@@ -96,7 +96,10 @@ frontend/src/
 │   ├── Login.vue    # 登录/注册页面
 │   ├── welcome.vue  # 欢迎页面
 │   ├── HomeView.vue # 主仪表板（单身/情侣模式）
+│   ├── NoteWallView.vue # 留言板/便签墙
 │   └── ProfileView.vue # 个人设置页面
+├── components/      # 公共组件
+│   └── FloatingDock.vue # 浮动导航栏
 ├── router/          # 路由配置
 │   └── index.js     # 路由定义
 ├── api/             # API 服务层
@@ -168,9 +171,9 @@ mysql -u root -p couple_blog < backend/couple-blog-backend/sql.txt
 | id | bigint | 帖子ID (自增) |
 | user_id | bigint | 发帖人ID |
 | couple_id | bigint | 归属情侣ID (NULL则为个人贴) |
-| title | varchar(100) | 帖子标题 |
+| title | varchar(100) | 帖子标题 (V2.1新增) |
 | content | text | 文字内容 |
-| cover_img | varchar(500) | 封面图 (用于首页展示) |
+| cover_img | varchar(500) | 封面图 (V2.1新增, 用于首页展示) |
 | image_urls | json | 多张配图JSON数组 |
 | permission | tinyint | 权限: 0公开, 1仅情侣, 2仅自己 |
 | activity_id | bigint | 关联的活动ID |
@@ -184,11 +187,20 @@ mysql -u root -p couple_blog < backend/couple-blog-backend/sql.txt
 | id | bigint | 留言ID (自增) |
 | couple_id | bigint | 情侣ID |
 | sender_id | bigint | 发送者ID |
-| content | varchar(1000) | 留言内容 (支持HTML) |
+| content | varchar(1000) | 留言内容 (支持HTML或简单的纯文本) |
 | bg_image | varchar(255) | 便签背景图/颜色风格 |
-| is_read | tinyint(1) | 对方是否已读 |
+| is_read | tinyint(1) | 对方是否已读 (默认: 0) |
+| mood | varchar(20) | 心情贴纸 (Emoji) |
+| is_hidden | tinyint(1) | 是否为刮刮乐 (0否 1是) |
+| is_on_home | tinyint(1) | 是否置顶到首页 (0否 1是) |
 | create_time | datetime | 留言时间 |
 | deleted | tinyint(1) | 逻辑删除 |
+
+**便签颜色说明：**
+- `yellow` - 羊皮纸黄 (#FDF6E3)
+- `pink` - 脏粉 (#FCE4EC)
+- `blue` - 冰川蓝 (#E1F5FE)
+- `green` - 抹茶绿 (#E8F5E9)
 
 #### 5. sys_timeline (恋爱时光轴)
 | 字段 | 类型 | 说明 |
@@ -295,7 +307,19 @@ is_happy TINYINT           -- 1=Happy 模式，0=Resting 模式
 - **绑定流程**: 输入对方邀请码 → 调用 `coupleApi.bindCouple()` → 建立关系
 - **解除绑定**: 个人页面提供"解除关系"按钮
 
-### 4. JWT 认证流程
+### 4. 留言板便签系统 (V2.0 新增)
+- **便签墙页面**: `NoteWallView.vue` - 显示所有个人便签
+- **首页展示**: `HomeView.vue` - 显示双方置顶的便签
+- **颜色支持**: 4种便签颜色 (yellow/pink/blue/green)
+- **置顶功能**: 全局唯一置顶（一个情侣只能置顶一条）
+- **后端接口**:
+  - `POST /note/send` - 发送留言
+  - `PUT /note/update` - 更新留言
+  - `PUT /note/pin/{id}` - 设置首页置顶
+  - `PUT /note/unpin/{id}` - 取消首页置顶
+  - `DELETE /note/{id}` - 删除留言
+
+### 5. JWT 认证流程
 1. **注册**: 密码 BCrypt 加密 → 生成邀请码
 2. **登录**: Spring Security 认证 → 返回 JWT token
 3. **存储**: 前端将 token 存在 localStorage
@@ -323,9 +347,20 @@ is_happy TINYINT           -- 1=Happy 模式，0=Resting 模式
 | GET | `/couple/info` | 获取情侣信息 |
 | DELETE | `/couple/unbind` | 解除情侣关系 |
 
+### 留言板管理 (`/note`)
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| POST | `/note/send` | 发送留言 |
+| PUT | `/note/update` | 更新留言 |
+| GET | `/note/list` | 查询留言列表 |
+| GET | `/note/unread` | 查询未读留言 |
+| PUT | `/note/pin/{id}` | 设置首页置顶 |
+| PUT | `/note/unpin/{id}` | 取消首页置顶 |
+| PUT | `/note/read/{id}` | 标记为已读 |
+| DELETE | `/note/{id}` | 删除留言 |
+
 ### 其他功能模块
 - `/post` - 博客文章管理
-- `/note` - 情侣留言板
 - `/timeline` - 时光轴记录
 - `/album` - 相册管理
 - `/wishlist` - 愿望清单
@@ -340,6 +375,7 @@ is_happy TINYINT           -- 1=Happy 模式，0=Resting 模式
 | `/login` | Login.vue | 登录/注册页面 |
 | `/home` | HomeView.vue | 主页面（单身→情侣模式切换） |
 | `/profile` | ProfileView.vue | 个人设置页面 |
+| `/notes` | NoteWallView.vue | 留言板便签墙 |
 
 ## 认证与安全
 
@@ -402,7 +438,27 @@ const res = await userApi.updateProfile({
 })
 ```
 
-### 4. 前端 API 调用规范
+### 4. 留言板便签流程
+```javascript
+// 发送便签
+const note = {
+  coupleId: user.coupleId,
+  senderId: user.id,
+  content: "想你啦~",
+  bgImage: "pink",
+  mood: "❤️"
+}
+await noteApi.sendNote(note)
+
+// 置顶到首页
+await noteApi.pinToHome(noteId)
+
+// 获取留言列表
+const res = await noteApi.getNoteList(coupleId)
+// 首页优先显示置顶的留言
+```
+
+### 5. 前端 API 调用规范
 
 所有 API 调用都在 `frontend/src/api/index.js` 中定义：
 
@@ -413,6 +469,17 @@ export const userApi = {
   login: (data) => request({ url: '/user/login', method: 'post', data }),
   updateProfile: (data) => request({ url: '/user/update', method: 'put', data }),
   // ...
+}
+
+// 留言板相关接口
+export const noteApi = {
+  sendNote: (data) => request({ url: '/note/send', method: 'post', data }),
+  updateNote: (data) => request({ url: '/note/update', method: 'put', data }),
+  getNoteList: (coupleId) => request({ url: '/note/list', params: { coupleId } }),
+  pinToHome: (id) => request({ url: `/note/pin/${id}`, method: 'put' }),
+  unpinFromHome: (id) => request({ url: `/note/unpin/${id}`, method: 'put' }),
+  deleteNote: (id) => request({ url: `/note/${id}`, method: 'delete' }),
+  markAsRead: (id) => request({ url: `/note/read/${id}`, method: 'put' })
 }
 ```
 
@@ -453,6 +520,16 @@ export const userApi = {
 **数据库配置**：
 - 默认: root/root（生产环境请修改！）
 
+### 数据库迁移
+新增字段时需要创建 SQL 迁移脚本，位置：`backend/couple-blog-backend/sql_migration_*.sql`
+
+示例：
+```sql
+-- 添加新字段
+ALTER TABLE `sys_note`
+ADD COLUMN `is_on_home` TINYINT(1) DEFAULT 0 COMMENT '是否置顶到首页(0否 1是)';
+```
+
 ### 代码生成工具
 **MyBatis-Plus 代码生成器** (`CodeGenerator.java`)：
 - 可生成 Entity、Mapper、Service、ServiceImpl、Controller
@@ -463,41 +540,51 @@ export const userApi = {
 **后端测试**: `./mvnw test`
 **前端测试**: 暂未配置测试框架
 
-## 已实现功能
+---
 
-### 核心功能
-✅ 用户注册/登录（JWT 认证）
-✅ 邀请码生成与情侣绑定
-✅ Happy/Resting 双状态系统
-✅ 个人资料管理（含心情配置）
-✅ 前后端完整交互流程
+## 版本说明
 
-### UI 特性
-✅ 响应式设计（移动端适配）
-✅ 毛玻璃效果卡片
-✅ 动态背景（Canvas 动画）
-✅ 温馨的配色方案
+### 当前版本：V2.0.1 (2026-02-12)
 
-### 待实现功能
-- 博客文章功能
-- 相册上传
-- 时光轴记录
-- 留言板
-- 愿望清单
-- 评论系统
+**变更类型：**
+- 🎉 新增功能
+- ✅ 功能完善
+- 🐛 问题修复
 
-## 调试技巧
+**详细更新日志：**
+详见 `UPDATE_LOG.md` 文档，包含：
+- 新增功能详情
+- 问题修复记录
+- 数据库变更说明
+- 文档更新记录
 
-### 后端调试
-1. **SQL 日志**: 已开启 MyBatis-Plus SQL 打印
-2. **调试接口**: `/user/debug/all` 可查看所有用户
-3. **Swagger 文档**: http://localhost:8080/swagger-ui.html
+---
 
-### 前端调试
-1. **开发模式**: `npm run dev` 启动热重载
-2. **网络请求**: 使用浏览器 DevTools 查看 Network 面板
-3. **状态管理**: 使用 Vue DevTools 插件
+## 最近更新 (2026-02-12)
+
+### 前端更新
+- ✅ 新增 `NoteWallView.vue` - 留言板便签墙页面
+- ✅ 新增 `FloatingDock.vue` - 浮动导航栏组件
+- ✅ `HomeView.vue` 留言卡片支持颜色联动
+- ✅ `HomeView.vue` 留言优先显示置顶的便签
+- ✅ 支持 4 种便签颜色：yellow, pink, blue, green
+
+### 后端更新
+- ✅ `Note.java` 实体新增 `isOnHome` 字段
+- ✅ `NoteController.java` 新增置顶/取消置顶接口
+- ✅ 数据库新增 `is_on_home` 字段 (需执行迁移 SQL)
+
+### 数据库更新
+详见 `DATABASE.md` 文档，已更新 `sys_note` 表的完整字段说明。
+
+### 待完善功能
+- ⚠️ 相册功能 - 缺少上传、删除等接口
+- ⚠️ 愿望清单 - 缺少增删改接口
+- ⚠️ 发布动态 - 缺少弹窗组件
+- ⚠️ 天气组件 - 温度为硬编码，未接入真实 API
 
 ---
 
 此文档涵盖了项目的核心架构、技术栈、功能特性以及前后端交互的完整流程。开发新功能时请遵循本文档的规范和约定。
+
+最后更新：2026-02-12
