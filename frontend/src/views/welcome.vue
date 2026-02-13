@@ -12,62 +12,8 @@
     <div class="bg-blob blob-2"></div>
     <div class="bg-blob blob-3"></div>
 
-    <el-dialog
-        v-model="showUpdateDialog"
-        width="400px"
-        :show-close="false"
-        class="update-dialog glass-effect"
-        align-center
-    >
-      <div class="update-content">
-        <div class="update-banner">
-          <img src="@/assets/微信图片_20260209195436_136_99.jpg" alt="Update Banner">
-          <div class="version-badge">v2.0.1</div>
-          <div class="close-icon" @click="closeUpdateDialog">
-            <el-icon><Close /></el-icon>
-          </div>
-        </div>
-        <div class="update-body">
-          <h2>🎉 新功能上线啦！</h2>
-          <div class="update-section">
-            <h4>✨ 留言板增强</h4>
-            <ul>
-              <li>📝 <strong>便签墙页面</strong>：记录你的心情寄语</li>
-              <li>🎨 <strong>4种便签颜色</strong>：yellow/pink/blue/green 自由选择</li>
-              <li>📌 <strong>置顶功能</strong>：首页显示最重要的便签</li>
-              <li>✏️ <strong>心情贴纸</strong>：带上 Emoji 表达此刻心情</li>
-              <li>💬 <strong>即时编辑</strong>：随时修改已发布的便签</li>
-            </ul>
-          </div>
-          <div class="update-section">
-            <h4>🧭 浮动导航栏</h4>
-            <ul>
-              <li>底部常驻，快速切换页面</li>
-              <li>适配移动端，单手操作友好</li>
-            </ul>
-          </div>
-          <div class="update-section">
-            <h4>🔄 首页联动</h4>
-            <ul>
-              <li>便签颜色在首页同步展示</li>
-              <li>置顶便签优先显示</li>
-              <li>双方留言分区展示</li>
-            </ul>
-          </div>
-          <div class="update-section developer-note">
-            <h4>💌 关于我们</h4>
-            <p>
-              Couple Blog 是一个专为情侣打造的私密空间。<br>
-              一次更新，都希望带给你们更多惊喜！💕<br><br>
-              感谢选择我们，祝你们永远甜如蜜糖！🍬
-            </p>
-          </div>
-          <div class="update-footer">
-            <span class="developer-sign">— Claude & 刘同学 🐱</span>
-          </div>
-        </div>
-      </div>
-    </el-dialog>
+    <!-- 更新弹窗组件 -->
+    <UpdateDialog />
 
     <section class="hero-section">
       <div class="hero-content fade-in-up">
@@ -179,18 +125,11 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
-import { ArrowRight, Close } from '@element-plus/icons-vue'
+import { ArrowRight } from '@element-plus/icons-vue'
 import FloatingDock from "@/components/FloatingDock.vue"
+import UpdateDialog from "@/components/UpdateDialog.vue"
 
 const router = useRouter()
-
-// --- 版本更新弹窗逻辑 ---
-const showUpdateDialog = ref(true)
-
-const closeUpdateDialog = () => {
-  showUpdateDialog.value = false
-}
 
 // --- 页面数据 ---
 const momentImages = [
@@ -684,65 +623,6 @@ const momentImages = [
   margin-top: 40px;
   position: relative;
   z-index: 2;
-}
-
-/* ================= 🌟 弹窗优化 ================= */
-.update-dialog :deep(.el-dialog) {
-  border-radius: 24px;
-  overflow: hidden;
-  padding: 0;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.95); /* 更实一点的背景 */
-}
-
-/* ... (弹窗内部CSS保持原逻辑，只需微调阴影) ... */
-.update-banner { position: relative; height: 180px; overflow: hidden; }
-.update-banner img { width: 100%; height: 100%; object-fit: cover; }
-.version-badge {
-  position: absolute; top: 12px; right: 42px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--primary-pink); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 800;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); backdrop-filter: blur(4px);
-}
-.close-icon {
-  position: absolute; top: 12px; right: 12px; width: 28px; height: 28px;
-  background: rgba(0, 0, 0, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  color: #fff; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px); z-index: 10;
-}
-.close-icon:hover { background: rgba(0, 0, 0, 0.6); transform: rotate(90deg); }
-.update-body { padding: 24px 30px; }
-.update-body h2 { font-size: 22px; font-weight: 800; color: #333; margin-bottom: 20px; text-align: center; }
-.update-section { margin-bottom: 24px; }
-.update-section h4 { font-size: 15px; font-weight: 700; color: #444; margin-bottom: 12px; }
-.update-section ul { margin: 0; padding-left: 6px; list-style: none; }
-.update-section li { margin-bottom: 8px; font-size: 14px; color: #666; position: relative; padding-left: 14px; }
-.update-section li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; background: var(--primary-pink); border-radius: 50%; }
-.developer-note { background: #FFF5F7; border-radius: 16px; padding: 16px; border: 1px dashed rgba(255, 143, 171, 0.3); }
-.developer-note p { margin: 0; color: #666; font-size: 13px; line-height: 1.7; }
-.update-footer { text-align: right; margin-top: 16px; }
-.developer-sign { font-size: 12px; color: #999; font-style: italic; }
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .hero-section {
-    flex-direction: column-reverse;
-    padding: 80px 20px 60px;
-    text-align: center;
-  }
-  .hero-image-wrapper { justify-content: center; margin-bottom: 50px; }
-  .soft-img { width: 70%; }
-  .sticker-love { right: 10%; top: -10px; }
-  .hero-title { font-size: 42px; }
-  .bento-grid, .moments-row { grid-template-columns: 1fr; gap: 20px; }
-  .clean-card { flex-direction: column; }
-  .clean-card .card-right { height: 220px; }
-  .card-left { padding: 40px 30px; }
-
-  /* 移动端去掉过于复杂的hover倾斜，保持简单 */
-  .bento-item:hover { transform: translateY(-5px); }
-  .polaroid-card { margin-bottom: 20px; }
-
-  :deep(.el-dialog.update-dialog) { width: 85% !important; margin-top: 15vh !important; }
 }
 
 /* 云朵动画保持不变，此处省略重复代码，上面HTML已包含 */
