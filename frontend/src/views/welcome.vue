@@ -75,7 +75,7 @@
       </div>
 
       <div class="hero-image-wrapper">
-        <img src="https://images.unsplash.com/photo-1516054575922-f0b8eeede20f?ixlib=rb-1.2.1&auto=format&fit=crop&w=900&auto=format&fit=crop&q=80" alt="Hero" class="soft-img" />
+        <img src="@/assets/logo.png" alt="Hero" class="soft-img" />
       </div>
     </section>
 
