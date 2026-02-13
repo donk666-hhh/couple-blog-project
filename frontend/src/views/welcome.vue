@@ -327,8 +327,8 @@ const momentImages = [
 .sticker-star { bottom: 40px; left: 10px; transform: rotate(-15deg); animation-delay: 0.7s; font-size: 30px; }
 
 @keyframes popIn {
-  from { transform: scale(0) rotate(0); opacity: 0; }
-  to { transform: scale(1) rotate(var(--rot, 0deg)); opacity: 1; }
+  from { transform: scale(0) rotate(0deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 /* Features Section */
