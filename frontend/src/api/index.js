@@ -191,6 +191,24 @@ export const albumApi = {
       url: `/album/source/${sourceId}/${sourceType}`,
       method: 'delete'
     })
+  },
+
+  // V2.0.1: 获取时光轴相册分组（文件夹视图）
+  getTimelineGroups: () => {
+    return request({
+      url: '/album/groups',
+      method: 'get',
+      params: { type: 'timeline' }
+    })
+  },
+
+  // V2.0.1: 获取愿望清单相册分组（文件夹视图）
+  getWishlistGroups: () => {
+    return request({
+      url: '/album/groups',
+      method: 'get',
+      params: { type: 'wishlist' }
+    })
   }
 }
 
