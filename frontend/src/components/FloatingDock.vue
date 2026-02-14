@@ -8,6 +8,10 @@
       <span class="dock-icon">📅</span>
     </div>
 
+    <div v-if="!isWelcomePage" class="dock-item" @click="router.push('/album')" :class="{ active: currentRoute === '/album' }">
+      <span class="dock-icon">📸</span>
+    </div>
+
     <!-- welcome 页面显示登录按钮，其他页面显示发布按钮 -->
     <div v-if="isWelcomePage" class="dock-item dock-add dock-login" @click="router.push('/login')">
       <span class="dock-icon-text">登录</span>

@@ -40,6 +40,9 @@
                 <div class="edit-btn" @click.stop="openEditDialog(item)">
                   <el-icon><EditPen /></el-icon>
                 </div>
+                <div class="sync-btn" @click.stop="handleResync(item.id)" title="同步到相册">
+                  <el-icon><Refresh /></el-icon>
+                </div>
                 <div class="delete-btn" @click.stop="handleDelete(item.id)">
                   <el-icon><Delete /></el-icon>
                 </div>
@@ -153,7 +156,7 @@
 import FloatingDock from '@/components/FloatingDock.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Plus, Delete, EditPen, Close, Loading } from '@element-plus/icons-vue'
+import { ArrowLeft, Plus, Delete, EditPen, Close, Loading, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { timelineApi, albumApi } from '@/api'
 
@@ -239,7 +242,10 @@ const removeImage = (index) => {
 
 const handleSubmit = async () => {
   if(!form.title || !form.eventDate) return ElMessage.warning('请填写完整信息')
-  if(isUploading.value) return ElMessage.warning('还有图片在上传中...')
+
+  // 检查所有图片是否都上传完成
+  const anyLoading = form.images.some(img => img.loading)
+  if(anyLoading) return ElMessage.warning('图片正在上传中，请稍候...')
 
   submitting.value = true
   try {
@@ -280,6 +286,27 @@ const handleDelete = async (id) => {
       events.value = events.value.filter(e => e.id !== id)
     }
   }).catch(() => {})
+}
+
+// 🌟 手动同步到相册
+const handleResync = async (id) => {
+  const loadingMsg = ElMessage.info({
+    message: '正在同步到相册...',
+    duration: 0,
+    icon: Loading
+  })
+
+  try {
+    const res = await timelineApi.resyncToAlbum(id)
+    loadingMsg.close()
+    if (res.code === '200') {
+      ElMessage.success('同步成功 ✨')
+      await fetchTimeline()
+    }
+  } catch (e) {
+    loadingMsg.close()
+    ElMessage.error('同步失败')
+  }
 }
 
 // 🌟 预览逻辑：支持左右滑动
@@ -323,9 +350,10 @@ onMounted(() => { fetchTimeline() })
 .content-card { background: #fff; border-radius: 24px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.03); transition: all 0.3s ease; position: relative; overflow: hidden; }
 .action-btns { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; visibility: hidden; opacity: 0; transition: 0.3s; z-index: 20; }
 .content-card:hover .action-btns { visibility: visible; opacity: 1; }
-.delete-btn, .edit-btn { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.delete-btn, .edit-btn, .sync-btn { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .delete-btn { background: #FF4D4F; }
 .edit-btn { background: #FFDAC1; color: #7a5c48; }
+.sync-btn { background: #67C23A; }
 .event-title { font-size: 18px; font-weight: 800; color: #5D5D5D; margin: 0 0 8px 0; }
 .event-desc { font-size: 14px; color: #888; line-height: 1.6; margin: 0; white-space: pre-wrap; }
 .type-selector { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }

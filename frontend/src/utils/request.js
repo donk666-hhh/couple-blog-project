@@ -31,6 +31,7 @@ request.interceptors.response.use(
     // 如果返回的状态码不是200，说明接口有问题
     if (res.code !== '200') {
       console.error('接口错误:', res.msg)
+      // 业务错误直接返回，不做任何跳转处理
       return Promise.reject(new Error(res.msg || 'Error'))
     }
     return res
@@ -38,24 +39,17 @@ request.interceptors.response.use(
   error => {
     console.error('响应错误:', error)
 
-    // 只处理真正的认证失败（401/403），忽略超时、网络错误等
+    // 先检查是否是认证错误
     const isAuthError = error.response?.status === 401 || error.response?.status === 403
-    const isTimeoutError = error.code === 'ECONNABORTED' && error.message?.includes('timeout')
-    const isNetworkError = !error.response && (error.message === 'Network Error' || error.code === 'ERR_NETWORK')
 
-    // 超时或网络错误：不清除 token，不跳转登录页
-    if (isTimeoutError || isNetworkError) {
-      console.log('网络或超时错误，保持当前页面')
+    if (isAuthError) {
+      console.log('检测到认证失败，清除token并跳转登录页')
+      localStorage.removeItem('token')
+      window.location.href = '/login'
       return Promise.reject(error)
     }
 
-    // 认证失败：清除 token 并跳转登录页
-    if (isAuthError) {
-      console.log('认证失败，清除token并跳转登录页')
-      localStorage.removeItem('token')
-      window.location.href = '/login'
-    }
-
+    // 其他所有错误：不清除 token，不跳转登录页
     return Promise.reject(error)
   }
 )

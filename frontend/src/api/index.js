@@ -259,6 +259,14 @@ export const timelineApi = {
       url: `/timeline/delete/${id}`,
       method: 'delete'
     })
+  },
+
+  // 手动同步到相册（修复功能）
+  resyncToAlbum: (id) => {
+    return request({
+      url: `/timeline/resync/${id}`,
+      method: 'post'
+    })
   }
 }
 
