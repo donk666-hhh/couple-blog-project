@@ -15,8 +15,9 @@
 
     <div class="timeline-wrapper">
       <div v-if="events.length === 0" class="empty-state">
-        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Empty">
-        <p>还没有记录大事件哦，快去添加第一个吧！✨</p>
+        <div class="empty-icon">📸</div>
+        <p class="empty-title">还没有记录大事件哦</p>
+        <p class="empty-desc">快去添加你们的第一个回忆吧！✨</p>
         <el-button round class="cream-btn" @click="openAddDialog">Record Now</el-button>
       </div>
 
@@ -118,7 +119,7 @@
         </el-form-item>
 
         <el-form-item label="Description">
-          <el-input v-model="form.description" type="textarea" rows="3" placeholder="写下当时的心情..." class="cream-input" />
+          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="写下当时的心情..." class="cream-input" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -154,7 +155,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Plus, Delete, EditPen, Close, Loading } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { timelineApi } from '@/api'
+import { timelineApi, albumApi } from '@/api'
 
 const router = useRouter()
 const dialogVisible = ref(false)
@@ -176,7 +177,9 @@ const fetchTimeline = async () => {
   try {
     const res = await timelineApi.getTimeline()
     if (res.code === '200') events.value = res.data || []
-  } catch (error) { if (error.response?.status === 401) router.push('/login') }
+  } catch (error) {
+    // 认证错误由 request.js 统一处理
+  }
 }
 
 // 🌟 解析逗号分隔的 URL
@@ -187,8 +190,11 @@ const parseImages = (urlStr) => {
 
 // 🌟 核心：打开编辑时，把字符串转回数组
 const openAddDialog = () => {
-  Object.assign(form, JSON.parse(JSON.stringify(initialForm)));
-  form.images = []; // 重置数组
+  // 逐个属性重置，避免 reactive 对象问题
+  Object.keys(initialForm).forEach(key => {
+    form[key] = initialForm[key]
+  })
+  form.images = []; // 重置图片数组
   dialogVisible.value = true
 }
 
@@ -254,10 +260,25 @@ const handleSubmit = async () => {
   } catch (e) { ElMessage.error('保存失败') } finally { submitting.value = false }
 }
 
-const handleDelete = (id) => {
-  ElMessageBox.confirm('确定要删除吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(async () => {
+const handleDelete = async (id) => {
+  // V2.0.1: 查询关联的相册照片数量，给出更友好的提示
+  const albumRes = await albumApi.getBySourceId(id)
+  const albumCount = albumRes.code === '200' ? (albumRes.data?.length || 0) : 0
+
+  const confirmMsg = albumCount > 0
+    ? `此操作将同时删除相册中的 ${albumCount} 张照片，是否继续？`
+    : '确定要删除吗？'
+
+  ElMessageBox.confirm(confirmMsg, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
     const res = await timelineApi.deleteEvent(id)
-    if (res.code === '200') { ElMessage.success('已删除'); events.value = events.value.filter(e => e.id !== id) }
+    if (res.code === '200') {
+      ElMessage.success(albumCount > 0 ? '删除成功，关联照片已同步删除' : '已删除')
+      events.value = events.value.filter(e => e.id !== id)
+    }
   }).catch(() => {})
 }
 
@@ -391,6 +412,46 @@ onMounted(() => { fetchTimeline() })
 /* 响应式弹窗 */
 :deep(.responsive-dialog) { width: 500px; border-radius: 28px !important; background-color: #FFFBF5 !important; }
 
+/* 🌟🌟🌟 空状态样式 🌟🌟🌟 */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: floatImage 3s ease-in-out infinite;
+}
+
+.empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #5D5D5D;
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  font-size: 16px;
+  color: #888;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.cream-btn {
+  background: #FF8FAB;
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
 /* 📱 手机端深度适配 */
 @media (max-width: 768px) {
   :deep(.responsive-dialog) { width: 92% !important; margin-top: 5vh !important; }
@@ -404,5 +465,12 @@ onMounted(() => { fetchTimeline() })
   /* 手机上九宫格单图稍微方一点 */
   .grid-gallery.cols-1 { aspect-ratio: 4 / 3; }
   .wall-item, .wall-uploader { width: 60px; height: 60px; } /* 手机上传格小一点 */
+
+  /* 空状态手机端适配 */
+  .empty-state { padding: 60px 20px; min-height: 300px; }
+  .empty-icon { font-size: 60px; }
+  .empty-title { font-size: 18px; }
+  .empty-desc { font-size: 14px; }
+  .cream-btn { padding: 10px 24px; font-size: 14px; }
 }
 </style>

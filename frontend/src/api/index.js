@@ -64,7 +64,8 @@ export const userApi = {
       url: '/user/upload-avatar',
       method: 'post',
       data: formData,
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000  // 文件上传需要更长超时时间：60秒
     })
   }
 }
@@ -129,12 +130,66 @@ export const postApi = {
 
 // 相册相关接口
 export const albumApi = {
+  // 上传照片到 OSS
+  uploadPhoto: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request({
+      url: '/album/upload',
+      method: 'post',
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000  // 文件上传需要更长超时时间：60秒
+    })
+  },
+
   // 获取相册列表
   getAlbumList: (params) => {
     return request({
       url: '/album/list',
       method: 'get',
       params
+    })
+  },
+
+  // V2.0.1: 按分区获取照片 (category: all/timeline/wishlist)
+  getByCategory: (category) => {
+    return request({
+      url: `/album/category/${category}`,
+      method: 'get'
+    })
+  },
+
+  // V2.0.1: 根据来源获取照片
+  getBySourceId: (sourceId) => {
+    return request({
+      url: `/album/source/${sourceId}`,
+      method: 'get'
+    })
+  },
+
+  // V2.0.1: 保存照片到数据库
+  savePhoto: (data) => {
+    return request({
+      url: '/album/save',
+      method: 'post',
+      data
+    })
+  },
+
+  // 删除单张照片（按ID）
+  deletePhoto: (id) => {
+    return request({
+      url: `/album/delete/${id}`,
+      method: 'delete'
+    })
+  },
+
+  // V2.0.1: 根据来源删除照片（批量级联删除）
+  deleteBySource: (sourceId, sourceType) => {
+    return request({
+      url: `/album/source/${sourceId}/${sourceType}`,
+      method: 'delete'
     })
   }
 }
@@ -157,7 +212,8 @@ export const timelineApi = {
       url: '/timeline/upload',
       method: 'post',
       data: formData,
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000  // 文件上传需要更长超时时间：60秒
     })
   },
 
@@ -196,6 +252,58 @@ export const wishlistApi = {
       url: '/wishlist/list',
       method: 'get',
       params: { coupleId }
+    })
+  },
+
+  // 创建愿望
+  createWishlist: (data) => {
+    return request({
+      url: '/wishlist/save',
+      method: 'post',
+      data
+    })
+  },
+
+  // 更新愿望
+  updateWishlist: (data) => {
+    return request({
+      url: '/wishlist/update',
+      method: 'put',
+      data
+    })
+  },
+
+  // 删除愿望
+  deleteWishlist: (id) => {
+    return request({
+      url: `/wishlist/delete/${id}`,
+      method: 'delete'
+    })
+  },
+
+  // V2.0.1: 上传愿望实现照片
+  uploadProofPhotos: (id, photoUrls) => {
+    return request({
+      url: `/wishlist/${id}/proof`,
+      method: 'post',
+      data: { photoUrls }
+    })
+  },
+
+  // V2.0.1: 关联时间轴里程碑
+  linkToTimeline: (id, timelineId) => {
+    return request({
+      url: `/wishlist/${id}/milestone`,
+      method: 'put',
+      data: { timelineId }
+    })
+  },
+
+  // V2.0.1: 取消时间轴里程碑关联
+  unlinkTimeline: (id) => {
+    return request({
+      url: `/wishlist/${id}/milestone`,
+      method: 'delete'
     })
   }
 }

@@ -650,8 +650,317 @@ const momentImages = [
 .sparkle:nth-child(5) { top: 60%; left: 10%; animation-delay: 1.2s; }
 @keyframes sparkleAnim { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
 
+/* 📱 移动端适配 */
+@media (max-width: 768px) {
+  /* Hero Section */
+  .hero-section {
+    flex-direction: column;
+    padding: 80px 20px 60px;
+    text-align: center;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    order: 2; /* 内容放下面 */
+  }
+
+  .hero-image-wrapper {
+    order: 1; /* 图片放上面 */
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  .soft-img {
+    width: 70%;
+    max-width: 280px;
+    transform: rotate(3deg) translateY(0);
+  }
+
+  .hero-title {
+    font-size: 42px;
+    line-height: 1.2;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+  }
+
+  .tag-pill {
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  .primary-btn {
+    padding: 12px 28px;
+    font-size: 14px;
+    margin: 0 auto;
+  }
+
+  /* Features Section */
+  .features-section {
+    padding: 40px 20px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .bento-item {
+    padding: 24px 20px;
+  }
+
+  .icon-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+
+  .content h3 { font-size: 18px; }
+  .content p { font-size: 13px; }
+
+  .arrow-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  /* Activity Section */
+  .activity-section {
+    padding: 30px 20px 60px;
+  }
+
+  .clean-card {
+    flex-direction: column;
+  }
+
+  .card-left {
+    padding: 30px 20px;
+  }
+
+  .card-left h2 {
+    font-size: 24px;
+  }
+
+  .card-left p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .meta-info {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .card-right {
+    min-height: 200px;
+  }
+
+  /* Moments Section */
+  .moments-section {
+    padding: 0 20px 80px;
+  }
+
+  .moments-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .polaroid-card {
+    transform: rotate(0deg) !important; /* 移动端不倾斜 */
+  }
+
+  .card-text h4 {
+    font-size: 14px;
+  }
+
+  .card-text span {
+    font-size: 10px;
+  }
+
+  /* Blobs smaller */
+  .blob-1 { width: 250px; height: 250px; }
+  .blob-2 { width: 200px; height: 200px; }
+  .blob-3 { width: 150px; height: 150px; }
+
+  /* Stickers smaller */
+  .sticker {
+    font-size: 28px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 40px 20px;
+    font-size: 12px;
+  }
+}
+
+/* 超小屏幕适配 (< 375px) */
+@media (max-width: 374px) {
+  .moments-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 移动端修正 */
 @media (max-width: 768px) {
-  .sparkle-btn::before { opacity: 1 !important; }
+  /* Hero Section */
+  .hero-section {
+    flex-direction: column;
+    padding: 80px 20px 60px;
+    text-align: center;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-image-wrapper {
+    order: 1;
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  .soft-img {
+    width: 70%;
+    max-width: 280px;
+    transform: rotate(3deg) translateY(0);
+  }
+
+  .hero-title {
+    font-size: 42px;
+    line-height: 1.2;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+  }
+
+  .tag-pill {
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  .primary-btn {
+    padding: 12px 28px;
+    font-size: 14px;
+    margin: 0 auto;
+  }
+
+  /* Features Section */
+  .features-section {
+    padding: 40px 20px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .bento-item {
+    padding: 24px 20px;
+  }
+
+  .icon-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+
+  .content h3 {
+    font-size: 18px;
+  }
+
+  .content p {
+    font-size: 13px;
+  }
+
+  .arrow-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  /* Activity Section */
+  .activity-section {
+    padding: 30px 20px 60px;
+  }
+
+  .clean-card {
+    flex-direction: column;
+  }
+
+  .card-left {
+    padding: 30px 20px;
+  }
+
+  .card-left h2 {
+    font-size: 24px;
+  }
+
+  .card-left p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .meta-info {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .card-right {
+    min-height: 200px;
+  }
+
+  /* Moments Section */
+  .moments-section {
+    padding: 0 20px 80px;
+  }
+
+  .moments-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding-top: 20px;
+  }
+
+  .polaroid-card {
+    transform: rotate(0deg) !important;
+  }
+
+  .card-text h4 {
+    font-size: 14px;
+  }
+
+  .card-text span {
+    font-size: 10px;
+  }
+
+  /* Blobs smaller */
+  .blob-1 { width: 250px; height: 250px; }
+  .blob-2 { width: 200px; height: 200px; }
+  .blob-3 { width: 150px; height: 150px; }
+
+  /* Stickers smaller */
+  .sticker {
+    font-size: 28px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 40px 20px;
+    font-size: 12px;
+  }
 }
 </style>

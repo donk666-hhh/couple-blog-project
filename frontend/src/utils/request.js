@@ -37,18 +37,25 @@ request.interceptors.response.use(
   },
   error => {
     console.error('响应错误:', error)
-    // 处理401未授权错误
-    if (error.response?.status === 401) {
-      console.log('401 未授权，清除token')
+
+    // 只处理真正的认证失败（401/403），忽略超时、网络错误等
+    const isAuthError = error.response?.status === 401 || error.response?.status === 403
+    const isTimeoutError = error.code === 'ECONNABORTED' && error.message?.includes('timeout')
+    const isNetworkError = !error.response && (error.message === 'Network Error' || error.code === 'ERR_NETWORK')
+
+    // 超时或网络错误：不清除 token，不跳转登录页
+    if (isTimeoutError || isNetworkError) {
+      console.log('网络或超时错误，保持当前页面')
+      return Promise.reject(error)
+    }
+
+    // 认证失败：清除 token 并跳转登录页
+    if (isAuthError) {
+      console.log('认证失败，清除token并跳转登录页')
       localStorage.removeItem('token')
       window.location.href = '/login'
     }
-    // 处理403禁止访问错误
-    if (error.response?.status === 403) {
-      console.log('403 禁止访问，清除token并跳转登录页')
-      localStorage.removeItem('token')
-      window.location.href = '/login'
-    }
+
     return Promise.reject(error)
   }
 )

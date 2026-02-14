@@ -221,7 +221,9 @@ const loadUserInfo = async () => {
         loadHomeNotes() // 🌟 加载首页展示的留言
       }
     }
-  } catch (error) { if (error.response?.status === 401) router.push('/login') }
+  } catch (error) {
+    // 认证错误由 request.js 统一处理
+  }
 }
 
 const loadCoupleInfo = async () => {

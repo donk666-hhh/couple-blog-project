@@ -16,10 +16,6 @@
       <span class="dock-icon-plus">+</span>
     </div>
 
-    <div class="dock-item" @click="router.push('/album?feature=album')" :class="{ active: currentRoute === '/album' }">
-      <span class="dock-icon">📷</span>
-    </div>
-
     <div class="dock-item" @click="router.push('/profile')" :class="{ active: currentRoute === '/profile' }">
       <span class="dock-icon">⚙️</span>
     </div>

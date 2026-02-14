@@ -9,6 +9,8 @@ import TimelineView from '../views/TimelineView.vue'
 import NoteWallView from '../views/NoteWallView.vue'
 import Roadmap from '../views/Roadmap.vue'
 import Developing from '../views/Developing.vue'
+import AlbumView from '../views/AlbumView.vue'
+import WishlistView from '../views/WishlistView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,21 +50,15 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/timeline',
-      name: 'timeline',
-      component: TimelineView,
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/album',
       name: 'album',
-      component: Developing,
+      component: AlbumView,
       meta: { requiresAuth: true }
     },
     {
       path: '/wishlist',
       name: 'wishlist',
-      component: Developing,
+      component: WishlistView,
       meta: { requiresAuth: true }
     },
     {
@@ -84,11 +80,17 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
 
+  // 调试：输出 token 状态
+  console.log('路由守卫 - token:', token ? '存在' : '不存在')
+  console.log('路由守卫 - 目标路由:', to.path, '需要认证:', to.meta?.requiresAuth)
+
   if (to.meta.requiresAuth && !token) {
     // 需要登录但没有 token，跳转到登录页
+    console.log('路由守卫 - 跳转登录页')
     next('/login')
   } else if (to.path === '/login' && token) {
     // 已登录用户访问登录页，跳转到首页
+    console.log('路由守卫 - 已登录访问登录页，跳转首页')
     next('/home')
   } else {
     next()
