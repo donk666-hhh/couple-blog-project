@@ -72,6 +72,20 @@
                 <span class="linked-label">关联愿望：</span>
                 <span class="linked-title">{{ getLinkedWishlist(item.id).icon }} {{ getLinkedWishlist(item.id).title }}</span>
               </div>
+
+              <!-- V2.0.1: 显示愿望的还愿照片 -->
+              <div v-if="getLinkedWishlist(item.id) && getWishlistPhotos(getLinkedWishlist(item.id).id).length > 0" class="wishlist-proof-photos">
+                <div class="wishlist-proof-label">📸 还愿照片</div>
+                <div class="wishlist-proof-grid" :class="getGridClass(getWishlistPhotos(getLinkedWishlist(item.id).id).length)">
+                  <img
+                    v-for="(url, idx) in getWishlistPhotos(getLinkedWishlist(item.id).id)"
+                    :key="`wish-${item.id}-${idx}`"
+                    :src="url"
+                    class="grid-img"
+                    @click.stop="previewImage(url, getWishlistPhotos(getLinkedWishlist(item.id).id))"
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -186,6 +200,8 @@ const getIcon = (type) => iconMap[type] || '❤️'
 const events = ref([])
 // V2.0.1: 存储时间轴事件关联的愿望信息 Map<timelineId, wishlist>
 const linkedWishlists = ref(new Map())
+// V2.0.1: 存储愿望的还愿照片 Map<wishlistId, photoUrls[]>
+const wishlistPhotosCache = ref(new Map())
 // images 数组用来暂存编辑时的图片对象 { url, uid, loading }
 const initialForm = { id: null, title: '', eventDate: '', imageUrl: '', images: [], description: '', type: 'love' }
 const form = reactive({ ...initialForm })
@@ -199,17 +215,32 @@ const fetchTimeline = async () => {
       await fetchLinkedWishlists()
     }
   } catch (error) {
+    console.error('获取时光轴失败:', error)
     // 认证错误由 request.js 统一处理
+    // 业务错误也忽略，保持静默失败
   }
 }
 
-// V2.0.1: 获取所有时间轴事件关联的愿望
+// V2.0.1: 获取所有时间轴事件关联的愿望及其照片
 const fetchLinkedWishlists = async () => {
   const promises = events.value.map(async (event) => {
     try {
       const res = await timelineApi.getLinkedWishlist(event.id)
       if (res.code === '200' && res.data) {
         linkedWishlists.value.set(event.id, res.data)
+
+        // 如果愿望有还愿照片凭证ID，获取照片URL
+        if (res.data.albumProofIds) {
+          try {
+            const photoRes = await albumApi.getBySourceId(res.data.id)
+            if (photoRes.code === '200' && photoRes.data) {
+              const urls = photoRes.data.map(album => album.url)
+              wishlistPhotosCache.value.set(res.data.id, urls)
+            }
+          } catch (e) {
+            console.error('获取愿望照片失败:', e)
+          }
+        }
       }
     } catch (e) {
       // 忽略获取失败的情况
@@ -221,6 +252,11 @@ const fetchLinkedWishlists = async () => {
 // 获取某个时间轴事件关联的愿望
 const getLinkedWishlist = (timelineId) => {
   return linkedWishlists.value.get(timelineId)
+}
+
+// 获取愿望的还愿照片URL列表
+const getWishlistPhotos = (wishlistId) => {
+  return wishlistPhotosCache.value.get(wishlistId) || []
 }
 
 // 点击关联愿望跳转到愿望页面
@@ -431,6 +467,11 @@ onMounted(() => {
 .delete-btn { background: #FF4D4F; }
 .edit-btn { background: #FFDAC1; color: #7a5c48; }
 .sync-btn { background: #67C23A; }
+
+/* V2.0.1: 当有愿望徽章时，按钮位置向左移，避免重叠 */
+.has-linked-wishlist .action-btns {
+  right: 130px;
+}
 .event-title { font-size: 18px; font-weight: 800; color: #5D5D5D; margin: 0 0 8px 0; }
 .event-desc { font-size: 14px; color: #888; line-height: 1.6; margin: 0; white-space: pre-wrap; }
 .type-selector { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -567,6 +608,11 @@ onMounted(() => {
   .event-date { position: static !important; text-align: left !important; margin-bottom: 8px !important; display: block !important; margin-top: -5px !important; }
   .action-btns { visibility: visible !important; opacity: 1 !important; top: 10px !important; right: 10px !important; background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
+  /* 手机端：有愿望徽章时按钮也向左移 */
+  .has-linked-wishlist .action-btns {
+    right: 80px !important;
+  }
+
   /* 手机上九宫格单图稍微方一点 */
   .grid-gallery.cols-1 { aspect-ratio: 4 / 3; }
   .wall-item, .wall-uploader { width: 60px; height: 60px; } /* 手机上传格小一点 */
@@ -633,6 +679,82 @@ onMounted(() => {
   font-size: 14px;
   color: #5D5D5D;
   font-weight: 700;
+}
+
+/* V2.0.1: 愿望还愿照片展示 - 微信朋友圈九宫格风格 */
+.wishlist-proof-photos {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: linear-gradient(135deg, #FFF8F0, #FFE8D6);
+  border-radius: 8px;
+}
+
+.wishlist-proof-label {
+  font-size: 10px;
+  color: #999;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.wishlist-proof-grid {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  max-width: 120px;
+}
+
+.wishlist-proof-grid .grid-img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center;
+  cursor: zoom-in;
+  border-radius: 3px;
+  background: #f0f0f0;
+  transition: opacity 0.2s;
+}
+
+.wishlist-proof-grid .grid-img:hover {
+  opacity: 0.85;
+}
+
+/* 微信朋友圈九宫格布局 */
+.wishlist-proof-grid.cols-1 {
+  grid-template-columns: 1fr;
+  max-width: 80px;
+}
+
+.wishlist-proof-grid.cols-1 .grid-img {
+  aspect-ratio: 1 / 1;
+}
+
+.wishlist-proof-grid.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.wishlist-proof-grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.wishlist-proof-grid.cols-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.wishlist-proof-grid.cols-5,
+.wishlist-proof-grid.cols-6 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.wishlist-proof-grid.cols-5 .grid-img:last-child,
+.wishlist-proof-grid.cols-6 .grid-img:nth-last-child(-2) {
+  grid-column: auto;
+}
+
+.wishlist-proof-grid.cols-7,
+.wishlist-proof-grid.cols-8,
+.wishlist-proof-grid.cols-9 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 /* 手机端适配徽章 */

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getToken } from '@/utils/auth'
 
 // 1. 引入我们的页面
 import Login from '../views/Login.vue'
@@ -23,7 +24,8 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: Login
+      component: Login,
+      meta: { guest: true }  // 标记为游客页面
     },
     {
       path: '/home',
@@ -64,37 +66,36 @@ const router = createRouter({
     {
       path: '/developing',
       name: 'developing',
-      component: Developing,
-      meta: { requiresAuth: false }
+      component: Developing
     },
     {
       path: '/roadmap',
       name: 'roadmap',
-      component: Roadmap,
-      meta: { requiresAuth: false }
+      component: Roadmap
     }
   ]
 })
 
-// 路由守卫：检查登录状态
+// 路由守卫：更宽松的认证检查
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
+  const requiresAuth = to.meta?.requiresAuth
+  const isGuestPage = to.meta?.guest
 
-  // 调试：输出 token 状态
-  console.log('路由守卫 - token:', token ? '存在' : '不存在')
-  console.log('路由守卫 - 目标路由:', to.path, '需要认证:', to.meta?.requiresAuth)
-
-  if (to.meta.requiresAuth && !token) {
-    // 需要登录但没有 token，跳转到登录页
-    console.log('路由守卫 - 跳转登录页')
-    next('/login')
-  } else if (to.path === '/login' && token) {
-    // 已登录用户访问登录页，跳转到首页
-    console.log('路由守卫 - 已登录访问登录页，跳转首页')
-    next('/home')
-  } else {
-    next()
+  // 已登录用户访问登录页，重定向到首页
+  if (isGuestPage && token) {
+    return next('/home')
   }
+
+  // 需要认证但没有token - 允许访问，让组件自己处理认证错误
+  // 这样可以提供更好的用户体验，不会一报错就踢用户出去
+  if (requiresAuth && !token) {
+    console.warn(`访问 ${to.path} 需要登录，但未检测到token`)
+    // 不自动跳转，让用户继续访问
+    // 如果API调用失败，会在组件层面提示用户
+  }
+
+  next()
 })
 
 export default router

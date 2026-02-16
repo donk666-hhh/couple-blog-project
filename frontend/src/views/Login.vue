@@ -87,6 +87,7 @@ import { useRouter } from 'vue-router'
 import { Back } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { userApi } from '@/api'
+import { setToken } from '@/utils/auth'
 
 // --- 原有逻辑 ---
 const router = useRouter()
@@ -115,8 +116,10 @@ const handleLogin = async () => {
       password: loginForm.password
     })
 
+    // 使用新的认证工具设置token
+    setToken(response.data.token)
+
     ElMessage.success('登录成功！')
-    localStorage.setItem('token', response.data.token)
     await router.push('/home')
   } catch (error) {
     console.error(error)
