@@ -26,6 +26,7 @@
         <div
             v-for="(item, index) in events"
             :key="item.id"
+            :data-timeline-id="item.id"
             class="timeline-item animate-item"
             :class="{ 'left': index % 2 === 0, 'right': index % 2 !== 0 }"
         >
@@ -35,7 +36,7 @@
 
           <div class="timeline-content">
             <span class="event-date">{{ formatDate(item.eventDate) }}</span>
-            <div class="content-card">
+            <div class="content-card" :class="{ 'has-linked-wishlist': getLinkedWishlist(item.id) }">
               <div class="action-btns">
                 <div class="edit-btn" @click.stop="openEditDialog(item)">
                   <el-icon><EditPen /></el-icon>
@@ -46,6 +47,11 @@
                 <div class="delete-btn" @click.stop="handleDelete(item.id)">
                   <el-icon><Delete /></el-icon>
                 </div>
+              </div>
+
+              <!-- V2.0.1: 愿望达成徽章 -->
+              <div v-if="getLinkedWishlist(item.id)" class="wishlist-badge" @click.stop="goToWishlist(getLinkedWishlist(item.id))">
+                ⭐️ 愿望达成
               </div>
 
               <div v-if="item.imageUrl" class="grid-gallery" :class="getGridClass(parseImages(item.imageUrl).length)">
@@ -60,6 +66,12 @@
 
               <h3 class="event-title">{{ item.title }}</h3>
               <p class="event-desc" v-if="item.description">{{ item.description }}</p>
+
+              <!-- V2.0.1: 显示关联的愿望 -->
+              <div v-if="getLinkedWishlist(item.id)" class="linked-wishlist" @click.stop="goToWishlist(getLinkedWishlist(item.id))">
+                <span class="linked-label">关联愿望：</span>
+                <span class="linked-title">{{ getLinkedWishlist(item.id).icon }} {{ getLinkedWishlist(item.id).title }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -172,6 +184,8 @@ const iconMap = { love: '❤️', travel: '✈️', food: '🍜', milestone: '�
 const getIcon = (type) => iconMap[type] || '❤️'
 
 const events = ref([])
+// V2.0.1: 存储时间轴事件关联的愿望信息 Map<timelineId, wishlist>
+const linkedWishlists = ref(new Map())
 // images 数组用来暂存编辑时的图片对象 { url, uid, loading }
 const initialForm = { id: null, title: '', eventDate: '', imageUrl: '', images: [], description: '', type: 'love' }
 const form = reactive({ ...initialForm })
@@ -179,10 +193,62 @@ const form = reactive({ ...initialForm })
 const fetchTimeline = async () => {
   try {
     const res = await timelineApi.getTimeline()
-    if (res.code === '200') events.value = res.data || []
+    if (res.code === '200') {
+      events.value = res.data || []
+      // 获取每个事件关联的愿望信息
+      await fetchLinkedWishlists()
+    }
   } catch (error) {
     // 认证错误由 request.js 统一处理
   }
+}
+
+// V2.0.1: 获取所有时间轴事件关联的愿望
+const fetchLinkedWishlists = async () => {
+  const promises = events.value.map(async (event) => {
+    try {
+      const res = await timelineApi.getLinkedWishlist(event.id)
+      if (res.code === '200' && res.data) {
+        linkedWishlists.value.set(event.id, res.data)
+      }
+    } catch (e) {
+      // 忽略获取失败的情况
+    }
+  })
+  await Promise.all(promises)
+}
+
+// 获取某个时间轴事件关联的愿望
+const getLinkedWishlist = (timelineId) => {
+  return linkedWishlists.value.get(timelineId)
+}
+
+// 点击关联愿望跳转到愿望页面
+const goToWishlist = (wishlist) => {
+  if (!wishlist) return
+  // 跳转到愿望页面
+  router.push('/wishlist')
+  // 可以通过 localStorage 传递要选中的愿望ID，让愿望页面高亮显示
+  localStorage.setItem('highlightWishlistId', wishlist.id)
+}
+
+// V2.0.1: 高亮某个时间轴事件（从愿望页面跳转过来）
+const highlightTimelineId = ref(null)
+
+const highlightTimelineEvent = (timelineId) => {
+  highlightTimelineId.value = timelineId
+  // 滚动到该元素
+  setTimeout(() => {
+    const element = document.querySelector(`[data-timeline-id="${timelineId}"]`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // 闪烁效果
+      element.classList.add('highlight-animation')
+      setTimeout(() => {
+        element.classList.remove('highlight-animation')
+      }, 2000)
+    }
+  }, 300)
 }
 
 // 🌟 解析逗号分隔的 URL
@@ -326,7 +392,18 @@ const getGridClass = (len) => {
   return 'cols-3'
 }
 
-onMounted(() => { fetchTimeline() })
+onMounted(() => {
+  fetchTimeline()
+  // V2.0.1: 检查是否有需要高亮的时间轴事件（从愿望页面跳转过来）
+  const highlightId = localStorage.getItem('highlightTimelineId')
+  if (highlightId) {
+    localStorage.removeItem('highlightTimelineId')
+    // 等待数据加载完成后高亮
+    setTimeout(() => {
+      highlightTimelineEvent(parseInt(highlightId))
+    }, 500)
+  }
+})
 </script>
 
 <style scoped>
@@ -500,5 +577,87 @@ onMounted(() => { fetchTimeline() })
   .empty-title { font-size: 18px; }
   .empty-desc { font-size: 14px; }
   .cream-btn { padding: 10px 24px; font-size: 14px; }
+}
+
+/* V2.0.1: 视觉联动 - 愿望达成样式 */
+.content-card.has-linked-wishlist {
+  border: 2px solid #FFD700 !important;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15) !important;
+}
+
+.wishlist-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 15;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.linked-wishlist {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #FFF8E7, #FFF0C7);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.linked-wishlist:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+}
+
+.linked-label {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
+
+.linked-title {
+  font-size: 14px;
+  color: #5D5D5D;
+  font-weight: 700;
+}
+
+/* 手机端适配徽章 */
+@media (max-width: 768px) {
+  .wishlist-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* V2.0.1: 高亮动画 */
+.highlight-animation {
+  animation: highlightPulse 1.5s ease-in-out 3;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.5);
+    transform: scale(1.02);
+  }
 }
 </style>

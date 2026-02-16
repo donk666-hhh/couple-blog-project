@@ -267,6 +267,14 @@ export const timelineApi = {
       url: `/timeline/resync/${id}`,
       method: 'post'
     })
+  },
+
+  // V2.0.1: 获取时间轴事件关联的愿望（视觉联动）
+  getLinkedWishlist: (id) => {
+    return request({
+      url: `/timeline/${id}/wishlist`,
+      method: 'get'
+    })
   }
 }
 
